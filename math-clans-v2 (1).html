@@ -1,0 +1,2601 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>The Clans — Math Patrol</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ════════════════════════════════════════════
+   ROOT TOKENS
+════════════════════════════════════════════ */
+:root {
+  --thunder: #E8A020;
+  --river:   #3A8FD4;
+  --wind:    #8BC472;
+  --shadow:  #9B6FD4;
+  --night:   #0A0D12;
+  --deep:    #111820;
+  --forest:  #182030;
+  --bark:    #263040;
+  --moonlight: #E4EAF4;
+  --silver:  #8A9AB0;
+  --ember:   #F05A28;
+  --correct: #4CAF82;
+  --wrong:   #E05252;
+  --clan-color: #E8A020;
+}
+body.ThunderClan { --clan-color: var(--thunder); --clan-bg: rgba(232,160,32,0.08); }
+body.RiverClan   { --clan-color: var(--river);   --clan-bg: rgba(58,143,212,0.08); }
+body.WindClan    { --clan-color: var(--wind);     --clan-bg: rgba(139,196,114,0.08); }
+body.ShadowClan  { --clan-color: var(--shadow);   --clan-bg: rgba(155,111,212,0.08); }
+
+/* ════════════════════════════════════════════
+   BASE
+════════════════════════════════════════════ */
+* { box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent; }
+html, body { height:100%; overflow:hidden; }
+body {
+  background: var(--night);
+  color: var(--moonlight);
+  font-family: 'Inter', sans-serif;
+  overflow: hidden;
+  position: fixed;
+  width: 100%;
+}
+
+/* ════════════════════════════════════════════
+   SCREEN SYSTEM
+════════════════════════════════════════════ */
+.screen {
+  display: none;
+  flex-direction: column;
+  position: fixed;
+  inset: 0;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  z-index: 10;
+}
+.screen.active { display: flex; }
+
+/* ════════════════════════════════════════════
+   STARS
+════════════════════════════════════════════ */
+#stars {
+  position: fixed; inset: 0; pointer-events: none; z-index: 1;
+  background:
+    radial-gradient(1px 1px at 8% 12%, rgba(255,255,255,0.9) 0%, transparent 100%),
+    radial-gradient(1px 1px at 23% 6%, rgba(255,255,255,0.7) 0%, transparent 100%),
+    radial-gradient(1.5px 1.5px at 41% 18%, rgba(255,255,255,0.8) 0%, transparent 100%),
+    radial-gradient(1px 1px at 67% 9%, rgba(255,255,255,0.6) 0%, transparent 100%),
+    radial-gradient(1px 1px at 82% 14%, rgba(255,255,255,0.9) 0%, transparent 100%),
+    radial-gradient(1.5px 1.5px at 91% 28%, rgba(255,255,255,0.5) 0%, transparent 100%),
+    radial-gradient(1px 1px at 15% 34%, rgba(255,255,255,0.4) 0%, transparent 100%),
+    radial-gradient(1px 1px at 54% 42%, rgba(255,255,255,0.6) 0%, transparent 100%),
+    radial-gradient(1px 1px at 76% 38%, rgba(255,255,255,0.3) 0%, transparent 100%),
+    radial-gradient(1.5px 1.5px at 33% 55%, rgba(255,255,255,0.5) 0%, transparent 100%),
+    radial-gradient(1px 1px at 89% 52%, rgba(255,255,255,0.4) 0%, transparent 100%),
+    radial-gradient(1px 1px at 6% 68%, rgba(255,255,255,0.6) 0%, transparent 100%),
+    radial-gradient(1px 1px at 48% 72%, rgba(255,255,255,0.3) 0%, transparent 100%),
+    radial-gradient(1.5px 1.5px at 71% 65%, rgba(255,255,255,0.7) 0%, transparent 100%),
+    radial-gradient(1px 1px at 19% 81%, rgba(255,255,255,0.4) 0%, transparent 100%),
+    radial-gradient(1px 1px at 62% 88%, rgba(255,255,255,0.5) 0%, transparent 100%),
+    radial-gradient(1px 1px at 37% 92%, rgba(255,255,255,0.3) 0%, transparent 100%),
+    radial-gradient(1.5px 1.5px at 85% 84%, rgba(255,255,255,0.6) 0%, transparent 100%);
+}
+
+/* ════════════════════════════════════════════
+   CINEMATIC SCREEN
+════════════════════════════════════════════ */
+#screen-cinematic {
+  background: var(--night);
+  z-index: 200;
+  justify-content: flex-end;
+  padding: 0;
+}
+
+.cin-scene {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 32px 20px;
+  position: relative;
+}
+
+.cin-moon {
+  width: 90px; height: 90px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #FFF8E0, #F0C040 40%, #B87800);
+  box-shadow: 0 0 60px 20px rgba(240,192,64,0.2), 0 0 120px 40px rgba(240,192,64,0.08);
+  margin-bottom: 28px;
+  animation: moonPulse 4s ease-in-out infinite;
+  flex-shrink: 0;
+}
+
+@keyframes moonPulse {
+  0%,100% { box-shadow: 0 0 60px 20px rgba(240,192,64,0.2), 0 0 120px 40px rgba(240,192,64,0.08); }
+  50%      { box-shadow: 0 0 80px 28px rgba(240,192,64,0.28), 0 0 160px 56px rgba(240,192,64,0.12); }
+}
+
+.cin-eyebrow {
+  font-size: 11px; letter-spacing: 3px; text-transform: uppercase;
+  color: var(--clan-color); margin-bottom: 10px; text-align: center;
+  opacity: 0; animation: cinFadeUp 0.6s 0.2s ease forwards;
+}
+
+.cin-title {
+  font-family: 'Cinzel', serif; font-size: 28px; font-weight: 900;
+  color: var(--moonlight); text-align: center; line-height: 1.15;
+  margin-bottom: 32px;
+  opacity: 0; animation: cinFadeUp 0.6s 0.4s ease forwards;
+}
+
+.cin-text-area {
+  width: 100%; flex: 1;
+  overflow-y: auto; -webkit-overflow-scrolling: touch;
+}
+
+.cin-page {
+  display: none;
+  animation: cinFadeUp 0.5s ease forwards;
+}
+.cin-page.active { display: block; }
+
+.cin-paragraph {
+  font-size: 16px; line-height: 1.75;
+  color: var(--moonlight); text-align: center;
+  margin-bottom: 18px;
+  opacity: 0; transition: opacity 0.4s ease;
+}
+.cin-paragraph.visible { opacity: 1; }
+
+.cin-bottom {
+  padding: 20px 32px 44px;
+  display: flex; flex-direction: column; gap: 12px;
+  background: linear-gradient(0deg, var(--night) 70%, transparent);
+}
+
+.cin-page-dots {
+  display: flex; justify-content: center; gap: 6px; margin-bottom: 8px;
+}
+.cin-dot {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--bark); transition: background 0.3s, transform 0.3s;
+}
+.cin-dot.active { background: var(--clan-color); transform: scale(1.3); }
+
+.btn-cin-continue {
+  width: 100%; padding: 18px; border-radius: 14px; border: none;
+  background: var(--clan-color); color: var(--night);
+  font-family: 'Cinzel', serif; font-size: 16px; font-weight: 700;
+  letter-spacing: 1px; cursor: pointer;
+  transition: transform 0.1s, opacity 0.2s;
+}
+.btn-cin-continue:active { transform: scale(0.98); }
+
+.btn-cin-skip {
+  background: transparent; border: none; color: var(--silver);
+  font-size: 13px; text-align: center; cursor: pointer; padding: 8px;
+}
+
+/* ════════════════════════════════════════════
+   CHOICE SCREEN
+════════════════════════════════════════════ */
+#screen-choice {
+  background: var(--night);
+  z-index: 200;
+  padding: 48px 24px 44px;
+  padding-top: calc(48px + env(safe-area-inset-top, 0px));
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+}
+
+.choice-cat { font-size: 56px; margin-bottom: 16px; animation: cinFadeUp 0.5s ease forwards; }
+
+.choice-setup {
+  font-size: 15px; line-height: 1.7; color: var(--silver);
+  text-align: center; margin-bottom: 24px;
+  animation: cinFadeUp 0.5s 0.15s ease forwards; opacity: 0;
+}
+
+.choice-question {
+  font-family: 'Cinzel', serif; font-size: 19px; font-weight: 700;
+  color: var(--moonlight); text-align: center; margin-bottom: 28px;
+  animation: cinFadeUp 0.5s 0.3s ease forwards; opacity: 0;
+}
+
+.choice-options {
+  width: 100%; display: flex; flex-direction: column; gap: 12px;
+  animation: cinFadeUp 0.5s 0.45s ease forwards; opacity: 0;
+}
+
+.choice-btn {
+  width: 100%; padding: 20px 18px; border-radius: 16px;
+  border: 2px solid var(--bark);
+  background: var(--forest); color: var(--moonlight);
+  font-family: 'Inter', sans-serif; font-size: 15px; font-weight: 600;
+  line-height: 1.4; text-align: left; cursor: pointer;
+  transition: border-color 0.2s, background 0.2s, transform 0.1s;
+  display: flex; align-items: center; gap: 14px;
+}
+.choice-btn:active { transform: scale(0.98); }
+.choice-btn .choice-arrow { font-size: 20px; flex-shrink: 0; }
+.choice-btn:hover { border-color: var(--clan-color); background: color-mix(in srgb, var(--clan-color) 8%, var(--forest)); }
+
+/* ════════════════════════════════════════════
+   ARC SELECT SCREEN
+════════════════════════════════════════════ */
+#screen-arcselect {
+  background: var(--night);
+  z-index: 150;
+  padding: 48px 24px 44px;
+  padding-top: calc(48px + env(safe-area-inset-top, 0px));
+}
+
+.arcselect-title {
+  font-family: 'Cinzel', serif; font-size: 26px; font-weight: 900;
+  color: var(--moonlight); margin-bottom: 6px; text-align: center;
+}
+.arcselect-sub {
+  font-size: 13px; color: var(--silver); text-align: center;
+  margin-bottom: 32px; letter-spacing: 1px;
+}
+
+.arc-cards { display: flex; flex-direction: column; gap: 14px; }
+
+.arc-card {
+  background: var(--forest); border: 2px solid var(--bark);
+  border-radius: 18px; padding: 20px;
+  display: flex; align-items: center; gap: 16px;
+  cursor: pointer; transition: border-color 0.2s, transform 0.1s;
+  position: relative;
+}
+.arc-card:active { transform: scale(0.98); }
+.arc-card.unlocked { border-color: var(--bark); }
+.arc-card.unlocked:hover { border-color: var(--clan-color); }
+.arc-card.locked { opacity: 0.45; cursor: not-allowed; }
+.arc-card.completed { border-color: color-mix(in srgb, var(--clan-color) 50%, var(--bark)); }
+
+.arc-emoji { font-size: 40px; flex-shrink: 0; }
+.arc-info { flex: 1; }
+.arc-subtitle { font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--silver); margin-bottom: 3px; }
+.arc-name { font-family: 'Cinzel', serif; font-size: 18px; font-weight: 700; color: var(--moonlight); margin-bottom: 6px; }
+.arc-desc { font-size: 12px; color: var(--silver); line-height: 1.5; }
+.arc-status { font-size: 11px; color: var(--clan-color); font-weight: 600; margin-top: 6px; letter-spacing: 0.5px; }
+
+.arc-lock { position: absolute; top: 16px; right: 16px; font-size: 20px; }
+
+/* ════════════════════════════════════════════
+   ONBOARDING
+════════════════════════════════════════════ */
+#screen-onboard {
+  background: linear-gradient(180deg, var(--night) 0%, var(--deep) 60%, var(--forest) 100%);
+  align-items: center;
+  padding: 44px 24px 44px;
+  z-index: 100;
+}
+
+.ob-moon {
+  width: 72px; height: 72px; border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #FFF8E0, #F0C040 40%, #B87800);
+  box-shadow: 0 0 40px 12px rgba(240,192,64,0.2);
+  margin-bottom: 18px; flex-shrink: 0;
+}
+
+.ob-title {
+  font-family: 'Cinzel', serif; font-size: 30px; font-weight: 900;
+  letter-spacing: 3px; color: var(--moonlight); text-align: center; margin-bottom: 4px;
+}
+.ob-sub {
+  font-size: 11px; color: var(--silver); text-align: center;
+  letter-spacing: 2px; text-transform: uppercase; margin-bottom: 28px;
+}
+
+.step { width: 100%; display: none; }
+.step.active { display: block; animation: cinFadeUp 0.35s ease forwards; }
+
+.step-eyebrow {
+  font-size: 10px; letter-spacing: 2px; text-transform: uppercase;
+  color: var(--silver); text-align: center; margin-bottom: 8px;
+}
+.step-question {
+  font-family: 'Cinzel', serif; font-size: 20px; font-weight: 700;
+  color: var(--moonlight); text-align: center; margin-bottom: 22px; line-height: 1.3;
+}
+
+/* clan cards */
+.clan-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
+.clan-card {
+  background: var(--forest); border: 2px solid var(--bark);
+  border-radius: 16px; padding: 18px 12px 14px;
+  text-align: center; cursor: pointer;
+  transition: border-color 0.2s, background 0.2s, transform 0.1s;
+}
+.clan-card:active { transform: scale(0.96); }
+.clan-card[data-clan="ThunderClan"] { --ca: var(--thunder); }
+.clan-card[data-clan="RiverClan"]   { --ca: var(--river);   }
+.clan-card[data-clan="WindClan"]    { --ca: var(--wind);     }
+.clan-card[data-clan="ShadowClan"]  { --ca: var(--shadow);   }
+.clan-card.selected { border-color: var(--ca); background: color-mix(in srgb, var(--ca) 12%, var(--forest)); }
+.clan-emoji { font-size: 34px; margin-bottom: 8px; }
+.clan-name { font-family: 'Cinzel', serif; font-size: 12px; font-weight: 700; color: var(--moonlight); margin-bottom: 3px; }
+.clan-trait { font-size: 11px; color: var(--silver); line-height: 1.4; }
+
+/* cat grid */
+.cat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 20px; }
+.cat-opt {
+  aspect-ratio: 1; border-radius: 14px; border: 2px solid var(--bark);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 34px; cursor: pointer; background: var(--forest);
+  transition: border-color 0.2s, transform 0.1s;
+}
+.cat-opt:active { transform: scale(0.92); }
+.cat-opt.selected { border-color: var(--clan-color); background: color-mix(in srgb, var(--clan-color) 14%, var(--forest)); }
+
+/* name input */
+.warrior-input {
+  width: 100%; background: var(--forest); border: 2px solid var(--bark);
+  border-radius: 14px; padding: 18px 20px;
+  font-family: 'Cinzel', serif; font-size: 22px; font-weight: 700;
+  color: var(--moonlight); text-align: center; outline: none;
+  transition: border-color 0.2s; -webkit-appearance: none; margin-bottom: 8px;
+}
+.warrior-input::placeholder { color: var(--bark); }
+.warrior-input:focus { border-color: var(--clan-color); }
+.name-hint { font-size: 12px; color: var(--silver); text-align: center; margin-bottom: 20px; }
+
+/* buttons */
+.btn-primary {
+  width: 100%; padding: 18px; border-radius: 14px; border: none;
+  background: var(--clan-color); color: var(--night);
+  font-family: 'Cinzel', serif; font-size: 16px; font-weight: 700;
+  letter-spacing: 1px; cursor: pointer;
+  transition: opacity 0.2s, transform 0.1s;
+}
+.btn-primary:active { transform: scale(0.98); opacity: 0.9; }
+.btn-primary:disabled { opacity: 0.3; cursor: not-allowed; }
+
+.btn-secondary {
+  width: 100%; padding: 15px; border-radius: 14px;
+  border: 2px solid var(--bark); background: transparent;
+  color: var(--silver); font-family: 'Inter', sans-serif;
+  font-size: 14px; font-weight: 600; cursor: pointer;
+  transition: border-color 0.2s; margin-top: 10px;
+}
+.btn-secondary:active { border-color: var(--silver); }
+
+/* ════════════════════════════════════════════
+   HOME SCREEN
+════════════════════════════════════════════ */
+#screen-home {
+  background: var(--night);
+  padding-bottom: 40px;
+  z-index: 10;
+}
+
+/* atmospheric header */
+.home-hero {
+  position: relative; overflow: hidden;
+  padding: 72px 24px 28px;
+  background: linear-gradient(180deg, var(--deep) 0%, transparent 100%);
+}
+.home-hero::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: radial-gradient(ellipse at 50% 0%, var(--clan-bg, rgba(232,160,32,0.08)) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.home-topbar {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 14px; position: relative; z-index: 1; gap: 8px;
+}
+
+.home-identity { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0; }
+.home-avatar {
+  width: 40px; height: 40px; border-radius: 50%; flex-shrink: 0;
+  background: var(--forest); border: 2px solid var(--clan-color);
+  display: flex; align-items: center; justify-content: center; font-size: 22px;
+}
+.home-name {
+  font-family: 'Cinzel', serif; font-size: 14px; font-weight: 700;
+  color: var(--moonlight); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+
+.home-rank-center {
+  display: flex; flex-direction: column; align-items: center;
+  position: absolute; left: 50%; transform: translateX(-50%);
+}
+.home-rank-lbl {
+  font-size: 9px; letter-spacing: 1.5px; text-transform: uppercase;
+  color: var(--silver); line-height: 1;
+}
+.home-rank-val {
+  font-family: 'Cinzel', serif; font-size: 15px; font-weight: 700;
+  color: var(--clan-color); line-height: 1.2; white-space: nowrap;
+}
+
+.streak-pill {
+  display: flex; align-items: center; gap: 4px;
+  background: var(--forest); border: 1px solid var(--bark);
+  border-radius: 20px; padding: 6px 10px; flex-shrink: 0;
+}
+.streak-fire { font-size: 15px; }
+.streak-num { font-family: 'Cinzel', serif; font-size: 14px; font-weight: 700; color: var(--ember); }
+.streak-lbl { font-size: 10px; color: var(--silver); }
+
+.hero-xp-row { margin-bottom: 14px; position: relative; z-index: 1; }
+.rank-bar-track { background: var(--bark); border-radius: 4px; height: 5px; margin-bottom: 5px; overflow: hidden; }
+.rank-bar-fill { height: 100%; border-radius: 4px; background: var(--clan-color); transition: width 0.8s cubic-bezier(0.4,0,0.2,1); }
+.rank-bar-labels { display: flex; justify-content: space-between; font-size: 10px; color: var(--silver); }
+
+/* arc indicator */
+.arc-indicator {
+  position: relative; z-index: 1;
+  background: color-mix(in srgb, var(--clan-color) 10%, var(--forest));
+  border: 1px solid color-mix(in srgb, var(--clan-color) 30%, transparent);
+  border-radius: 14px; padding: 14px 16px;
+  display: flex; align-items: center; gap: 12px; margin-bottom: 0;
+  cursor: pointer; transition: border-color 0.2s;
+}
+.arc-indicator:active { opacity: 0.85; }
+.arc-ind-emoji { font-size: 26px; }
+.arc-ind-info { flex: 1; }
+.arc-ind-label { font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--silver); margin-bottom: 2px; }
+.arc-ind-name { font-family: 'Cinzel', serif; font-size: 16px; font-weight: 700; color: var(--moonlight); }
+.arc-ind-arrow { font-size: 14px; color: var(--silver); }
+
+/* rank journey graph */.journey-card {
+  margin: 16px 24px 0;
+  background: var(--forest); border: 1px solid var(--bark);
+  border-radius: 14px; padding: 16px 18px;
+}
+.journey-label { font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--silver); margin-bottom: 12px; }
+.journey-graph {
+  position: relative; height: 6px;
+  background: var(--bark); border-radius: 4px; margin-bottom: 10px;
+  overflow: visible;
+}
+.journey-track-fill {
+  position: absolute; left: 0; top: 0; height: 100%;
+  background: var(--clan-color); border-radius: 4px;
+  transition: width 0.8s cubic-bezier(0.4,0,0.2,1);
+}
+.journey-node {
+  position: absolute; top: 50%; transform: translate(-50%, -50%);
+  width: 10px; height: 10px; border-radius: 50%;
+  background: var(--bark); border: 2px solid var(--bark);
+  transition: background 0.4s, border-color 0.4s;
+  z-index: 2;
+}
+.journey-node.done { background: var(--clan-color); border-color: var(--clan-color); }
+.journey-node.current {
+  background: var(--night); border-color: var(--clan-color);
+  width: 14px; height: 14px;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--clan-color) 30%, transparent);
+}
+.journey-ranks {
+  display: flex; justify-content: space-between;
+}
+.journey-rank-lbl {
+  font-size: 9px; color: var(--silver); text-align: center;
+  flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.journey-rank-lbl:first-child { text-align: left; }
+.journey-rank-lbl:last-child  { text-align: right; }
+.journey-rank-lbl.current-rank { color: var(--clan-color); font-weight: 700; }
+
+/* XP progress block on results */
+.res-xp-block {
+  width: 100%; background: var(--forest); border: 1px solid var(--bark);
+  border-radius: 14px; padding: 16px 18px; margin-bottom: 14px;
+}
+.res-xp-labels {
+  display: flex; justify-content: space-between; align-items: baseline;
+  margin-bottom: 10px;
+}
+.res-xp-rank { font-family: 'Cinzel', serif; font-size: 15px; font-weight: 700; color: var(--clan-color); }
+.res-xp-next { font-size: 12px; color: var(--silver); }
+.res-xp-track {
+  position: relative; height: 8px; background: var(--bark);
+  border-radius: 5px; overflow: hidden; margin-bottom: 8px;
+}
+.res-xp-fill-before {
+  position: absolute; left: 0; top: 0; height: 100%;
+  background: color-mix(in srgb, var(--clan-color) 45%, var(--bark));
+  border-radius: 5px; transition: none;
+}
+.res-xp-fill-after {
+  position: absolute; left: 0; top: 0; height: 100%;
+  background: var(--clan-color); border-radius: 5px;
+  transition: width 1.2s cubic-bezier(0.4,0,0.2,1);
+}
+.res-xp-sub { font-size: 12px; color: var(--silver); text-align: center; }
+
+/* nudge */
+.nudge {
+  margin: 16px 24px 0;
+  background: color-mix(in srgb, var(--clan-color) 12%, var(--forest));
+  border: 1px solid color-mix(in srgb, var(--clan-color) 35%, transparent);
+  border-radius: 14px; padding: 14px 16px;
+  display: none; align-items: center; gap: 12px;
+}
+.nudge.show { display: flex; }
+.nudge-icon { font-size: 22px; }
+.nudge-text { font-size: 13px; color: var(--moonlight); line-height: 1.5; }
+.nudge-text strong { color: var(--clan-color); }
+
+/* patrol CTA */
+.patrol-cta { padding: 16px 24px 0; }
+.btn-patrol {
+  width: 100%; padding: 22px; border-radius: 18px; border: none;
+  background: var(--clan-color); color: var(--night);
+  font-family: 'Cinzel', serif; font-size: 20px; font-weight: 900;
+  letter-spacing: 1px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+  transition: transform 0.1s, box-shadow 0.2s;
+  box-shadow: 0 4px 24px color-mix(in srgb, var(--clan-color) 35%, transparent);
+}
+.btn-patrol:active { transform: scale(0.98); }
+.btn-patrol-paw { font-size: 22px; }
+
+/* divider */
+.hdivider { height: 1px; background: var(--bark); margin: 20px 24px 0; }
+
+/* stats */
+.home-section { padding: 20px 24px 0; }
+.sec-label { font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--silver); margin-bottom: 14px; }
+.stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.stat-card { background: var(--forest); border: 1px solid var(--bark); border-radius: 14px; padding: 16px; }
+.stat-val { font-family: 'Cinzel', serif; font-size: 26px; font-weight: 900; color: var(--moonlight); line-height: 1; margin-bottom: 4px; }
+.stat-lbl { font-size: 11px; color: var(--silver); }
+
+/* badges */
+.badge-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+.badge-card {
+  background: var(--forest); border: 1px solid var(--bark);
+  border-radius: 14px; padding: 14px 8px 10px; text-align: center;
+  transition: border-color 0.3s;
+}
+.badge-card.earned { border-color: var(--clan-color); background: color-mix(in srgb, var(--clan-color) 10%, var(--forest)); }
+.badge-icon { font-size: 26px; margin-bottom: 5px; }
+.badge-card:not(.earned) .badge-icon { filter: grayscale(1) opacity(0.35); }
+.badge-op { font-size: 10px; color: var(--silver); }
+.badge-pct { font-size: 11px; font-weight: 700; color: var(--clan-color); margin-top: 2px; }
+
+/* history bars */
+.history-bars { display: flex; align-items: flex-end; gap: 6px; height: 72px; margin-bottom: 6px; }
+.hbar-wrap { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; }
+.hbar { width: 100%; border-radius: 3px 3px 0 0; background: var(--bark); min-height: 4px; transition: height 0.5s ease; }
+.hbar.filled { background: var(--clan-color); opacity: 0.75; }
+.hday { font-size: 9px; color: var(--silver); }
+
+/* ════════════════════════════════════════════
+   PATROL INTRO SCREEN
+════════════════════════════════════════════ */
+#screen-patrol-intro {
+  background: var(--night);
+  z-index: 50;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 32px;
+  gap: 0;
+}
+.pi-cat { font-size: 72px; margin-bottom: 20px; animation: piPulse 1.5s ease-in-out infinite; }
+@keyframes piPulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.06)} }
+.pi-clan { font-size: 11px; letter-spacing: 3px; text-transform: uppercase; color: var(--clan-color); margin-bottom: 8px; text-align: center; }
+.pi-title { font-family: 'Cinzel', serif; font-size: 28px; font-weight: 900; color: var(--moonlight); text-align: center; margin-bottom: 16px; line-height: 1.2; }
+.pi-quote { font-size: 15px; color: var(--silver); text-align: center; line-height: 1.7; font-style: italic; margin-bottom: 36px; }
+.pi-start {
+  width: 100%; padding: 20px; border-radius: 16px; border: none;
+  background: var(--clan-color); color: var(--night);
+  font-family: 'Cinzel', serif; font-size: 18px; font-weight: 900;
+  letter-spacing: 2px; cursor: pointer; transition: transform 0.1s;
+}
+.pi-start:active { transform: scale(0.98); }
+
+/* ════════════════════════════════════════════
+   PATROL SCREEN
+════════════════════════════════════════════ */
+#screen-patrol {
+  background: var(--night);
+  z-index: 50;
+  overflow: hidden;
+}
+
+.patrol-header {
+  padding: 48px 20px 14px;
+  padding-top: calc(48px + env(safe-area-inset-top, 0px));
+  display: flex; align-items: center; gap: 12px;
+  flex-shrink: 0;
+}
+.patrol-prog-wrap { flex: 1; }
+.patrol-qcount { font-family: 'Cinzel', serif; font-size: 12px; color: var(--silver); margin-bottom: 5px; }
+.patrol-prog-track { background: var(--bark); border-radius: 4px; height: 5px; overflow: hidden; }
+.patrol-prog-fill { height: 100%; border-radius: 4px; background: var(--clan-color); transition: width 0.3s ease; }
+.patrol-score-display {
+  font-family: 'Cinzel', serif; font-size: 22px; font-weight: 900;
+  color: var(--clan-color); min-width: 52px; text-align: right;
+}
+
+.patrol-op-label {
+  text-align: center; font-size: 10px; letter-spacing: 2.5px;
+  text-transform: uppercase; color: var(--silver); padding: 0 20px;
+  flex-shrink: 0;
+}
+
+/* problem */
+.problem-area {
+  flex: 1; display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  padding: 10px 24px 0; min-height: 0;
+}
+.problem-eq {
+  font-family: 'Cinzel', serif; font-size: 56px; font-weight: 900;
+  color: var(--moonlight); text-align: center; line-height: 1;
+  letter-spacing: -1px; margin-bottom: 10px;
+}
+.problem-eq.shake { animation: shake 0.4s ease; }
+@keyframes shake {
+  0%,100%{transform:translateX(0)}
+  15%{transform:translateX(-8px)}
+  30%{transform:translateX(8px)}
+  45%{transform:translateX(-6px)}
+  60%{transform:translateX(6px)}
+  75%{transform:translateX(-3px)}
+  90%{transform:translateX(3px)}
+}
+
+/* timer */
+.timer-wrap { width: 54px; height: 54px; position: relative; margin-bottom: 8px; }
+.timer-wrap svg { transform: rotate(-90deg); }
+.t-bg { stroke: var(--bark); }
+.t-fill { stroke: var(--clan-color); stroke-linecap: round; transition: stroke-dashoffset 0.1s linear; }
+.t-fill.urgent { stroke: var(--wrong); }
+.timer-num {
+  position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+  font-family: 'Cinzel', serif; font-size: 15px; font-weight: 700; color: var(--moonlight);
+}
+
+/* particles */
+.particles-container { position: fixed; inset: 0; pointer-events: none; z-index: 300; }
+.particle {
+  position: absolute; font-size: 18px;
+  animation: particleFly 0.7s ease-out forwards;
+  pointer-events: none;
+}
+@keyframes particleFly {
+  0%   { opacity: 1; transform: translate(0,0) scale(1); }
+  100% { opacity: 0; transform: translate(var(--dx), var(--dy)) scale(0.4); }
+}
+
+/* wrong flash overlay */
+.wrong-overlay {
+  position: fixed; inset: 0; pointer-events: none; z-index: 290;
+  background: rgba(224,82,82,0.15); opacity: 0;
+  transition: opacity 0.1s;
+}
+.wrong-overlay.flash { opacity: 1; }
+
+/* numpad */
+.numpad-area { padding: 0 20px 32px; flex-shrink: 0; }
+.answer-display {
+  background: var(--forest); border: 2px solid var(--bark);
+  border-radius: 14px; padding: 14px; text-align: center;
+  font-family: 'Cinzel', serif; font-size: 32px; font-weight: 900;
+  color: var(--moonlight); min-height: 62px; margin-bottom: 12px;
+  transition: border-color 0.15s; letter-spacing: 3px;
+}
+.answer-display.has-val { border-color: var(--clan-color); }
+.answer-display.correct-ans { border-color: var(--correct); color: var(--correct); }
+.answer-display.wrong-ans   { border-color: var(--wrong);   color: var(--wrong); }
+.answer-placeholder { color: var(--bark); font-size: 22px; letter-spacing: 4px; }
+
+.numpad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.nk {
+  background: var(--forest); border: 1px solid var(--bark);
+  border-radius: 13px; height: 62px;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Cinzel', serif; font-size: 22px; font-weight: 700;
+  color: var(--moonlight); cursor: pointer;
+  transition: background 0.08s, transform 0.06s;
+  -webkit-user-select: none; border: none; outline: none;
+}
+.nk:active { background: var(--bark); transform: scale(0.93); }
+.nk-go { background: var(--clan-color); color: var(--night); font-size: 16px; letter-spacing: 1px; }
+.nk-go:active { opacity: 0.85; }
+.nk-del { font-size: 18px; }
+
+/* ════════════════════════════════════════════
+   RESULTS SCREEN
+════════════════════════════════════════════ */
+#screen-results {
+  background: var(--night);
+  z-index: 50;
+  padding: 48px 24px 44px;
+  padding-top: calc(48px + env(safe-area-inset-top, 0px));
+  align-items: center;
+}
+
+.res-icon { font-size: 64px; margin-bottom: 14px; }
+.res-headline {
+  font-family: 'Cinzel', serif; font-size: 26px; font-weight: 900;
+  color: var(--moonlight); text-align: center; margin-bottom: 4px;
+}
+.res-subline { font-size: 14px; color: var(--silver); text-align: center; margin-bottom: 24px; }
+
+/* score ring */
+.score-ring-wrap { width: 130px; height: 130px; position: relative; margin-bottom: 24px; }
+.score-ring-wrap svg { transform: rotate(-90deg); }
+.sr-bg { stroke: var(--bark); }
+.sr-fill { stroke-linecap: round; transition: stroke-dashoffset 1s cubic-bezier(0.4,0,0.2,1); }
+.score-center {
+  position: absolute; inset: 0; display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+}
+.score-val { font-family: 'Cinzel', serif; font-size: 36px; font-weight: 900; color: var(--clan-color); line-height: 1; }
+.score-lbl { font-size: 11px; color: var(--silver); }
+
+.res-stats { width: 100%; display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 20px; }
+.res-stat { background: var(--forest); border: 1px solid var(--bark); border-radius: 14px; padding: 14px 10px; text-align: center; }
+.res-stat-val { font-family: 'Cinzel', serif; font-size: 22px; font-weight: 900; color: var(--moonlight); margin-bottom: 3px; }
+.res-stat-lbl { font-size: 11px; color: var(--silver); }
+
+/* story breadcrumb on results */
+.res-breadcrumb {
+  width: 100%;
+  background: var(--forest); border: 1px solid var(--bark);
+  border-radius: 14px; padding: 16px 18px; margin-bottom: 20px;
+}
+.res-bc-lbl { font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--clan-color); margin-bottom: 8px; }
+.res-bc-text { font-size: 14px; color: var(--silver); line-height: 1.7; font-style: italic; }
+
+.res-actions { width: 100%; display: flex; flex-direction: column; gap: 10px; margin-top: auto; padding-top: 16px; }
+
+/* ════════════════════════════════════════════
+   ARC COMPLETE SCREEN
+════════════════════════════════════════════ */
+#screen-arc-complete {
+  background: var(--night);
+  z-index: 200;
+  padding: 48px 24px 44px;
+  padding-top: calc(48px + env(safe-area-inset-top, 0px));
+  align-items: center;
+  justify-content: center;
+}
+.ac-stars { font-size: 48px; margin-bottom: 16px; letter-spacing: 8px; }
+.ac-title { font-family: 'Cinzel', serif; font-size: 26px; font-weight: 900; color: var(--moonlight); text-align: center; margin-bottom: 8px; }
+.ac-sub { font-size: 14px; color: var(--silver); text-align: center; margin-bottom: 32px; line-height: 1.6; }
+.ac-actions { width: 100%; display: flex; flex-direction: column; gap: 12px; }
+
+/* ════════════════════════════════════════════
+   ANIMATIONS
+════════════════════════════════════════════ */
+@keyframes cinFadeUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.fade-in { animation: fadeIn 0.3s ease forwards; }
+
+@keyframes scaleIn {
+  from { opacity:0; transform: scale(0.92); }
+  to   { opacity:1; transform: scale(1); }
+}
+
+@keyframes popScore { 0%,100%{transform:scale(1)} 50%{transform:scale(1.2)} }
+.pop-score { animation: popScore 0.22s ease; }
+</style>
+</head>
+<body>
+
+<!-- Fixed layers -->
+<div id="stars"></div>
+<div class="particles-container" id="particlesContainer"></div>
+<div class="wrong-overlay" id="wrongOverlay"></div>
+
+<!-- ══════════════════════════════════════════
+     CINEMATIC SCREEN
+══════════════════════════════════════════ -->
+<div class="screen" id="screen-cinematic">
+  <div class="cin-scene">
+    <div class="cin-moon" id="cinMoon"></div>
+    <div class="cin-eyebrow" id="cinEyebrow"></div>
+    <div class="cin-title" id="cinTitle"></div>
+    <div class="cin-text-area" id="cinTextArea"></div>
+  </div>
+  <div class="cin-bottom">
+    <div class="cin-page-dots" id="cinDots"></div>
+    <button class="btn-cin-continue" id="cinContinueBtn" onclick="cinNextPage()">Continue →</button>
+    <button class="btn-cin-skip" onclick="cinSkip()">Skip story</button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     CHOICE SCREEN
+══════════════════════════════════════════ -->
+<div class="screen" id="screen-choice">
+  <div class="choice-cat" id="choiceCat"></div>
+  <div class="choice-setup" id="choiceSetup"></div>
+  <div class="choice-question" id="choiceQuestion"></div>
+  <div class="choice-options" id="choiceOptions"></div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     ARC SELECT SCREEN
+══════════════════════════════════════════ -->
+<div class="screen" id="screen-arcselect">
+  <div class="arcselect-title">Choose Your Path</div>
+  <div class="arcselect-sub">Each arc is a new story. Complete one to unlock the next.</div>
+  <div class="arc-cards" id="arcCards"></div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     ONBOARDING SCREEN
+══════════════════════════════════════════ -->
+<div class="screen" id="screen-onboard">
+  <div class="ob-moon"></div>
+  <div class="ob-title">The Clans</div>
+  <div class="ob-sub">Math Patrol</div>
+
+  <div class="step active" id="step-clan">
+    <div class="step-eyebrow">Step 1 of 3</div>
+    <div class="step-question">Choose your clan</div>
+    <div class="clan-grid">
+      <div class="clan-card" data-clan="ThunderClan" onclick="selectClan(this)">
+        <div class="clan-emoji">⚡</div>
+        <div class="clan-name">ThunderClan</div>
+        <div class="clan-trait">Bold. Fast. Fearless.</div>
+      </div>
+      <div class="clan-card" data-clan="RiverClan" onclick="selectClan(this)">
+        <div class="clan-emoji">🌊</div>
+        <div class="clan-name">RiverClan</div>
+        <div class="clan-trait">Patient. Clever. Swift.</div>
+      </div>
+      <div class="clan-card" data-clan="WindClan" onclick="selectClan(this)">
+        <div class="clan-emoji">🌿</div>
+        <div class="clan-name">WindClan</div>
+        <div class="clan-trait">Free. Swift. Enduring.</div>
+      </div>
+      <div class="clan-card" data-clan="ShadowClan" onclick="selectClan(this)">
+        <div class="clan-emoji">🌑</div>
+        <div class="clan-name">ShadowClan</div>
+        <div class="clan-trait">Cunning. Stealthy. Fierce.</div>
+      </div>
+    </div>
+    <button class="btn-primary" id="btnClanNext" disabled onclick="goStep('cat')">Choose Clan →</button>
+  </div>
+
+  <div class="step" id="step-cat">
+    <div class="step-eyebrow">Step 2 of 3</div>
+    <div class="step-question">Choose your warrior</div>
+    <div class="cat-grid">
+      <div class="cat-opt" data-cat="🐱" onclick="selectCat(this)">🐱</div>
+      <div class="cat-opt" data-cat="🐈" onclick="selectCat(this)">🐈</div>
+      <div class="cat-opt" data-cat="🐈‍⬛" onclick="selectCat(this)">🐈‍⬛</div>
+      <div class="cat-opt" data-cat="🦁" onclick="selectCat(this)">🦁</div>
+      <div class="cat-opt" data-cat="🐆" onclick="selectCat(this)">🐆</div>
+      <div class="cat-opt" data-cat="🐅" onclick="selectCat(this)">🐅</div>
+      <div class="cat-opt" data-cat="🦊" onclick="selectCat(this)">🦊</div>
+      <div class="cat-opt" data-cat="🐺" onclick="selectCat(this)">🐺</div>
+    </div>
+    <button class="btn-primary" id="btnCatNext" disabled onclick="goStep('name')">Choose Warrior →</button>
+    <button class="btn-secondary" onclick="goStep('clan')">← Back</button>
+  </div>
+
+  <div class="step" id="step-name">
+    <div class="step-eyebrow">Step 3 of 3</div>
+    <div class="step-question">What is your warrior name?</div>
+    <input class="warrior-input" id="nameInput" type="text" placeholder="Fireheart"
+      maxlength="20" oninput="onNameInput()" autocomplete="off" autocorrect="off" spellcheck="false">
+    <div class="name-hint">Warriors earn their name. Make it yours.</div>
+    <button class="btn-primary" id="btnNameNext" disabled onclick="completeOnboarding()">Join the Clan →</button>
+    <button class="btn-secondary" onclick="goStep('cat')">← Back</button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     HOME SCREEN
+══════════════════════════════════════════ -->
+<div class="screen" id="screen-home">
+  <div class="home-hero">
+    <div class="home-topbar">
+      <div class="home-identity">
+        <div class="home-avatar" id="homeAvatar"></div>
+        <div class="home-name" id="homeName"></div>
+      </div>
+      <div class="home-rank-center">
+        <span class="home-rank-lbl">Your Rank</span>
+        <span class="home-rank-val" id="rankName">Kit</span>
+      </div>
+      <div class="streak-pill">
+        <span class="streak-fire">🔥</span>
+        <span class="streak-num" id="streakNum">0</span>
+        <span class="streak-lbl">streak</span>
+      </div>
+    </div>
+    <div class="hero-xp-row">
+      <div class="rank-bar-track"><div class="rank-bar-fill" id="rankBarFill" style="width:0%"></div></div>
+      <div class="rank-bar-labels">
+        <span id="rankXpLabel">0 XP</span>
+        <span id="rankNextLabel">→ Apprentice</span>
+      </div>
+    </div>
+    <div class="arc-indicator" onclick="showArcSelect()">
+      <div class="arc-ind-emoji" id="arcIndEmoji">🔥</div>
+      <div class="arc-ind-info">
+        <div class="arc-ind-label">Current Arc</div>
+        <div class="arc-ind-name" id="arcIndName">The Fire Season</div>
+      </div>
+      <div class="arc-ind-arrow">›</div>
+    </div>
+  </div>
+
+  <!-- Rank Journey Graph -->
+  <div class="journey-card">
+    <div class="journey-label">Your Journey</div>
+    <div class="journey-graph" id="journeyGraph"></div>
+    <div class="journey-ranks" id="journeyRanks"></div>
+  </div>
+
+  <div class="nudge" id="nudgeBanner">
+    <span class="nudge-icon">🌙</span>
+    <div class="nudge-text"><strong>Your clan needs you.</strong> No patrol yet today.</div>
+  </div>
+
+  <div class="patrol-cta">
+    <button class="btn-patrol" onclick="startPatrolIntro()">
+      <span class="btn-patrol-paw">🐾</span>
+      <span>Begin Patrol</span>
+    </button>
+  </div>
+
+  <div class="hdivider"></div>
+
+  <div class="home-section">
+    <div class="sec-label">Your Stats</div>
+    <div class="stats-grid">
+      <div class="stat-card"><div class="stat-val" id="statPatrols">0</div><div class="stat-lbl">Total Patrols</div></div>
+      <div class="stat-card"><div class="stat-val" id="statBestAcc">—</div><div class="stat-lbl">Best Accuracy</div></div>
+      <div class="stat-card"><div class="stat-val" id="statMastered">0</div><div class="stat-lbl">Facts Mastered</div></div>
+      <div class="stat-card"><div class="stat-val" id="statBestScore">—</div><div class="stat-lbl">Best Score</div></div>
+    </div>
+  </div>
+
+  <div class="hdivider"></div>
+
+  <div class="home-section">
+    <div class="sec-label">Mastery Badges</div>
+    <div class="badge-row">
+      <div class="badge-card" id="badgeAdd"><div class="badge-icon">➕</div><div class="badge-op">Addition</div><div class="badge-pct" id="pctAdd">0%</div></div>
+      <div class="badge-card" id="badgeSub"><div class="badge-icon">➖</div><div class="badge-op">Subtract</div><div class="badge-pct" id="pctSub">0%</div></div>
+      <div class="badge-card" id="badgeMul"><div class="badge-icon">✖️</div><div class="badge-op">Multiply</div><div class="badge-pct" id="pctMul">0%</div></div>
+      <div class="badge-card" id="badgeDiv"><div class="badge-icon">➗</div><div class="badge-op">Division</div><div class="badge-pct" id="pctDiv">0%</div></div>
+    </div>
+  </div>
+
+  <div class="hdivider"></div>
+
+  <div class="home-section" style="padding-bottom:20px;">
+    <div class="sec-label">Recent Patrols</div>
+    <div class="history-bars" id="historyBars"></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     PATROL INTRO SCREEN
+══════════════════════════════════════════ -->
+<div class="screen" id="screen-patrol-intro">
+  <div class="pi-cat" id="piCat"></div>
+  <div class="pi-clan" id="piClan"></div>
+  <div class="pi-title" id="piTitle">Answer fast. Answer true.</div>
+  <div class="pi-quote" id="piQuote">"A warrior who hesitates loses more than the fight."</div>
+  <button class="pi-start" onclick="beginPatrol()">Begin Patrol 🐾</button>
+</div>
+
+<!-- ══════════════════════════════════════════
+     PATROL SCREEN
+══════════════════════════════════════════ -->
+<div class="screen" id="screen-patrol">
+  <div class="patrol-header">
+    <div class="patrol-prog-wrap">
+      <div class="patrol-qcount" id="patrolQCount">Question 1 of 20</div>
+      <div class="patrol-prog-track"><div class="patrol-prog-fill" id="patrolProgFill" style="width:0%"></div></div>
+    </div>
+    <div class="patrol-score-display" id="patrolScoreDisplay">0</div>
+  </div>
+
+  <div class="patrol-op-label" id="patrolOpLabel">Addition</div>
+
+  <div class="problem-area">
+    <div class="problem-eq" id="problemEq">3 + 4</div>
+    <div class="timer-wrap">
+      <svg width="54" height="54" viewBox="0 0 54 54">
+        <circle class="t-bg" cx="27" cy="27" r="23" fill="none" stroke-width="4"/>
+        <circle class="t-fill" id="timerRing" cx="27" cy="27" r="23" fill="none" stroke-width="4"
+          stroke-dasharray="144.5" stroke-dashoffset="0"/>
+      </svg>
+      <div class="timer-num" id="timerNum">8</div>
+    </div>
+  </div>
+
+  <div class="numpad-area">
+    <div class="answer-display" id="answerDisplay"><span class="answer-placeholder">_ _</span></div>
+    <div class="numpad">
+      <button class="nk" onclick="nkPress('7')">7</button>
+      <button class="nk" onclick="nkPress('8')">8</button>
+      <button class="nk" onclick="nkPress('9')">9</button>
+      <button class="nk" onclick="nkPress('4')">4</button>
+      <button class="nk" onclick="nkPress('5')">5</button>
+      <button class="nk" onclick="nkPress('6')">6</button>
+      <button class="nk" onclick="nkPress('1')">1</button>
+      <button class="nk" onclick="nkPress('2')">2</button>
+      <button class="nk" onclick="nkPress('3')">3</button>
+      <button class="nk nk-del" onclick="nkPress('del')">⌫</button>
+      <button class="nk" onclick="nkPress('0')">0</button>
+      <button class="nk nk-go" onclick="nkPress('go')">GO</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     RESULTS SCREEN
+══════════════════════════════════════════ -->
+<div class="screen" id="screen-results">
+  <div class="res-icon" id="resIcon">🌕</div>
+  <div class="res-headline" id="resHeadline">Patrol Complete</div>
+  <div class="res-subline" id="resSubline">You fought well, warrior.</div>
+
+  <div class="score-ring-wrap">
+    <svg width="130" height="130" viewBox="0 0 130 130">
+      <circle class="sr-bg" cx="65" cy="65" r="56" fill="none" stroke-width="7"/>
+      <circle class="sr-fill" id="scoreRingFill" cx="65" cy="65" r="56" fill="none" stroke-width="7"
+        stroke-dasharray="351.86" stroke-dashoffset="351.86"/>
+    </svg>
+    <div class="score-center">
+      <div class="score-val" id="scoreVal">0</div>
+      <div class="score-lbl">Score</div>
+    </div>
+  </div>
+
+  <div class="res-stats">
+    <div class="res-stat"><div class="res-stat-val" id="resCorrect">0/20</div><div class="res-stat-lbl">Correct</div></div>
+    <div class="res-stat"><div class="res-stat-val" id="resAccuracy">0%</div><div class="res-stat-lbl">Accuracy</div></div>
+    <div class="res-stat"><div class="res-stat-val" id="resXp">+0</div><div class="res-stat-lbl">XP</div></div>
+  </div>
+
+  <!-- XP Progress toward next rank -->
+  <div class="res-xp-block" id="resXpBlock">
+    <div class="res-xp-labels">
+      <span class="res-xp-rank" id="resXpRank">Apprentice</span>
+      <span class="res-xp-next" id="resXpNext">→ Warrior</span>
+    </div>
+    <div class="res-xp-track">
+      <div class="res-xp-fill-before" id="resXpBefore"></div>
+      <div class="res-xp-fill-after" id="resXpAfter"></div>
+    </div>
+    <div class="res-xp-sub" id="resXpSub">+0 XP · 0 / 0 to next rank</div>
+  </div>
+
+  <!-- Story breadcrumb -->
+  <div class="res-breadcrumb" id="resBreadcrumb">
+    <div class="res-bc-lbl">🌿 Meanwhile in the forest...</div>
+    <div class="res-bc-text" id="resBcText"></div>
+  </div>
+
+  <div class="res-actions">
+    <button class="btn-primary" id="resRankUpBtn" style="display:none" onclick="triggerRankUp()">⬆️ Your Rank Has Changed →</button>
+    <button class="btn-primary" id="resPatrolBtn" onclick="startPatrolIntro()">Run Another Patrol</button>
+    <button class="btn-secondary" onclick="showScreen('home')">Back to Camp</button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     ARC COMPLETE SCREEN
+══════════════════════════════════════════ -->
+<div class="screen" id="screen-arc-complete">
+  <div class="ac-stars">⭐⭐⭐</div>
+  <div class="ac-title" id="acTitle">Arc Complete!</div>
+  <div class="ac-sub" id="acSub">You have reached Leader rank and completed your story.</div>
+  <div class="ac-actions">
+    <button class="btn-primary" onclick="replayCurrentArc()">Play Again</button>
+    <button class="btn-secondary" onclick="showArcSelect()">Choose a Different Arc</button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     JAVASCRIPT
+══════════════════════════════════════════ -->
+<script>
+'use strict';
+
+// ════════════════════════════════════════════
+// STORY DATA
+// ════════════════════════════════════════════
+const STORY = {
+  arc0: {
+    title:"The Fire Season", subtitle:"Arc I", emoji:"🔥",
+    desc:"A fire threatens all four clans. Can the clans unite before everything burns?",
+    intro:{ pages:[
+      "The night you were born, lightning split the great oak at the heart of camp.",
+      "The elders said nothing like it had happened in living memory. They whispered over your nest while your mother slept, their voices low and careful.",
+      "Yellowfang — the old medicine cat with the scarred muzzle — looked at you for a long time without speaking. Then she said: \"This one will be tested.\"",
+      "Nobody told you what she meant. Nobody needed to. You were a kit. The world was the size of the nursery and smelled of milk and moss.",
+      "But the forest remembered the lightning. And the forest was waiting."
+    ]},
+    ranks:[
+      { rankName:"Kit", unlockStory:null },
+      { rankName:"Apprentice", unlockStory:{
+        title:"Your First Dawn",
+        pages:[
+          "Your mentor's name is Stoneflight — a grey tom with amber eyes and a reputation for patience that runs out quickly.",
+          "\"The border does not care how tired you are,\" he tells you on your first morning patrol, before the sun has cleared the treeline. \"It only cares whether you walked it.\"",
+          "You follow him through wet fern and over the ridge that marks the edge of {clan} territory. The air smells different here — sharper, like pine resin and something foreign.",
+          "Stoneflight stops. His tail goes rigid. A cat sits at the border marker — from RiverClan, you can tell by her sleek coat. But she is not posturing. She is not challenging.",
+          "She is shaking."
+        ]},
+        choicePoint:{ id:"arc0_cp1",
+          setup:"Stoneflight growls low. \"RiverClan. State your business.\" The she-cat — barely older than an apprentice — glances at the treeline behind her like something is following. \"Please,\" she whispers. \"Something is wrong in the forest. I need to speak to a leader. Any leader.\"",
+          question:"Stoneflight looks at you. Somehow, the decision falls to you first.",
+          optionA:{ label:"Step forward. Hear what she knows now.", short:"You listened to the stranger",
+            response:"You step forward before Stoneflight can stop you. \"Tell us here,\" you say. \"Now. What did you see?\"\n\nHer name is Silverpaw. And what she tells you changes everything. The northern forest is dying — not from drought, but from heat beneath the ground. The earth there is warm to the paw even at midnight." },
+          optionB:{ label:"Hold the border. Report to your leader first.", short:"You held the border",
+            response:"\"We report to our leader first,\" you say firmly. Stoneflight nods once — approval, quiet and quick.\n\nBy the time you return with the deputy, Silverpaw is gone. But she left something at the border stone: a single grey feather, pressed into the earth. RiverClan's mark for urgent news." }
+        }
+      },
+      { rankName:"Warrior", unlockStory:{
+        title:"Smoke on the Wind",
+        pages:[
+          "{BRANCH_A}You brought Silverpaw's warning back immediately. Your leader listened without interrupting — never a good sign. \"A patrol,\" she said. \"Now. {name}, you lead it.\" You were not yet a warrior. But the forest does not wait for ceremony.|{BRANCH_B}The feather told your leader everything. Three days later, before she could act on it, you smelled the smoke yourself.",
+          "The fire starts as a curl above the northern ridge. By nightfall it is a wall.",
+          "The four clans have not stood together since before any living cat can remember. But fire does not respect borders.",
+          "A Gathering is called at Fourtrees — not the monthly truce, but an emergency meeting. You stand at your leader's shoulder and look across at faces that are supposed to be enemies. They look as frightened as you feel.",
+          "The leaders argue. ThunderClan wants a joint firebreak. ShadowClan refuses to fight alongside RiverClan after a border dispute last moon. WindClan's leader is old and says nothing."
+        ]},
+        choicePoint:{ id:"arc0_cp2",
+          setup:"The argument circles and the smoke gets thicker. Your leader turns to you. \"You were there at the beginning. You have seen what is coming. Speak.\" Every cat at the Gathering is watching.",
+          question:"You have one chance to change the course of this meeting.",
+          optionA:{ label:"Argue for full alliance. All four clans together.", short:"You called for unity",
+            response:"\"The fire will not stop at our borders,\" you say. Your voice is steadier than you expect. \"And neither will we.\"\n\nSilence. Then the RiverClan leader dips her head. One by one, the others follow.\n\nThe firebreak is dug over four brutal days. It holds." },
+          optionB:{ label:"Your clan first. Protect your territory, then help others.", short:"You chose your clan first",
+            response:"\"Our first duty is to {clan},\" you say. \"We protect our own. Then we help who we can.\"\n\nYour leader's eyes are unreadable. Half the Gathering nods — the pragmatic half. A plan forms. Slower, harder. But yours. Two clans lose territory they won't recover. Yours survives." }
+        }
+      },
+      { rankName:"Senior Warrior", unlockStory:{
+        title:"After the Ash",
+        pages:[
+          "{BRANCH_A}The united firebreak holds. Four days. Three cats with burned pawpads. One elder with damaged hearing. But the fire stops at the line you dug together.|{BRANCH_B}Your strategy saves {clan}'s territory. You try not to think too hard about the clans whose borders burned.",
+          "The northern pines are gone. Black trunks stand like teeth against a white sky.",
+          "And into the silence of the burned ground, something comes.",
+          "They call themselves the Ashwalkers. Twelve cats, no clan markings. Eyes that have seen something the forest cats haven't.",
+          "Their leader is a large black she-cat with a notched ear. She stands in the burned clearing without apology. \"This land belongs to no clan now,\" she says. \"We will live here.\"\n\n\"You have no right,\" your deputy says.\n\n\"We have paws and claws and we are here,\" she answers. \"That is all the right there is.\""
+        ]},
+        choicePoint:null
+      },
+      { rankName:"Deputy", unlockStory:{
+        title:"The Exile's Name",
+        pages:[
+          "Your leader sends you alone to meet the Ashwalkers. \"Two cats negotiating is a conversation,\" she says. \"More than two is a threat.\"",
+          "You cross the burned ground at dawn, when the ash is cold. The Ashwalkers watch you come but don't move.",
+          "Up close, the notch in the she-cat's ear is a clean cut. A clan cut. The mark of exile.",
+          "\"You were {clan},\" you say. Not a question.",
+          "\"I was many things,\" she says. \"My name is Ashfall. I was exiled before you were born. I did not come back to make war. I came back because this is the only place I know.\"\n\nYou sit with her until the sun is high. She tells you about the twelve cats who followed her — most born outside the clans, all looking for something that feels like belonging."
+        ]},
+        choicePoint:{ id:"arc0_cp3",
+          setup:"\"I am not asking to come home,\" Ashfall says carefully. \"I am asking to exist.\" You must bring an answer back to your leader. What Ashfall and her cats do next depends entirely on what you say.",
+          question:"What answer do you carry back?",
+          optionA:{ label:"Offer her a path to clan membership. A trial period.", short:"You offered Ashfall a chance",
+            response:"\"Come to the next Gathering,\" you say. \"Not as a clan. As a petition. Let the leaders decide together.\"\n\nAshfall is quiet for so long you think she'll refuse.\n\n\"You would do that for a cat you met this morning?\"\n\n\"I would do it for twelve cats who need somewhere to be,\" you say." },
+          optionB:{ label:"Hold the warrior code. They can stay, but not join.", short:"You held the warrior code",
+            response:"\"The warrior code exists for a reason,\" you say. \"You can stay in the burned territory. We won't challenge you. But clan membership requires a leader's ceremony and a clan's vote.\"\n\nAshfall nods slowly. \"That is more than I expected,\" she says. \"And less than I hoped.\"\n\n\"I know,\" you say. \"I'm sorry.\"" }
+        }
+      },
+      { rankName:"Leader", unlockStory:{
+        title:"The Name Spoken at Fourtrees",
+        pages:[
+          "{BRANCH_A}The Gathering happens under a full moon. Ashfall stands at the edge of the Great Circle — not inside yet, not outside. It takes an hour of argument. You speak twice. The second time, nobody interrupts you.\n\nWhen it is done, Ashfall walks into the circle. Her cats follow, one by one, stepping over the line that used to mean everything and now means something different. Not the end of the clans. Something new.|{BRANCH_B}The burned territory becomes its own thing — not quite a clan. The Ashwalkers build camp in the black pines. Occasionally one appears at a border with herbs, or information. It is awkward and imperfect and real.\n\nAshfall sends you a message at leaf-bare: a bundle of dried herbs at the border stone. No note. Just the herbs.",
+          "That night, you dream of StarClan for the first time.",
+          "The cats there are made of light — you can't look at them directly, but you feel them watching you with something that isn't pride exactly. More like recognition.",
+          "A voice says your name. \"{name} of {clan}.\"",
+          "Just that. Just your name, spoken in a place where names matter more than anywhere else.\n\nYou wake before dawn, the camp quiet around you. For a moment the ordinary world feels very thin — like you could put a paw through it if you tried.\n\nThe Fire Season is over. You are not the cat who was born in the lightning storm anymore.\n\nYou are something the storm made."
+        ]},
+        choicePoint:null
+      }
+    ],
+    breadcrumbs:[
+      "Stoneflight watched your training session without commenting. Afterward he said only: \"Again tomorrow.\" You have learned this is high praise.",
+      "A kit followed you to the fresh-kill pile and asked if you were really as fast as they say. You don't know who \"they\" are. You ran faster on the evening patrol anyway.",
+      "The moon was red last night. The elders gathered outside and murmured until dawn. Nobody explained why.",
+      "You found a hawk feather caught in the brambles at the eastern border. Your mentor said to leave it. You left it. But you remembered exactly where.",
+      "Prey is good this moon. The apprentices are getting cocky. Stoneflight says cockiness is just confidence that hasn't been tested yet.",
+      "There was frost on the training ground this morning. You slipped twice. You did not slip a third time.",
+      "A RiverClan patrol crossed the stepping stones and stopped at the border for a long moment before turning back. Nobody challenged them. Nobody needed to.",
+      "The dawn chorus this morning had three birds where there should be five. Your mentor said nothing. His ears were flat.",
+      "The medicine cat asked about your dreams this week. You said they were fine. She looked at you the way cats look at things they're deciding whether to worry about.",
+      "You outran every other apprentice in the morning patrol. Stoneflight pretended not to notice. You could tell he noticed.",
+      "Something has been moving the border markers — small stones that the patrols leave. Nobody knows what or why. The deputy ordered double patrols.",
+      "StarClan sent clouds across the moon at the last Gathering. The medicine cats said it was a warning. They disagreed about what kind.",
+      "You helped an elder with her ticks today. She told you a story about a warrior who could catch fish with bare paws, which no cat of your clan had done before or since.",
+      "The northern wind smells different this moon. Drier. Hotter. Like something far away is burning.",
+      "Rain for three days. On the fourth day the sun came out and everyone pretended the three days hadn't happened."
+    ]
+  },
+
+  arc1: {
+    title:"The Long Dark", subtitle:"Arc II", emoji:"🌑",
+    desc:"A medicine cat vanishes. A traitor hides in plain sight. The truth has a cost.",
+    intro:{ pages:[
+      "The medicine cat visited you in a dream before you could see properly.",
+      "You know this because she told you later — after your eyes opened, after the world resolved into nursery walls and your mother's warm flank. She found you and said: \"I came to you last night. Do you remember?\"",
+      "You didn't. You were three days old.",
+      "\"That's alright,\" she said, and smiled in a way that didn't reach her eyes. \"You will.\"",
+      "Her name was Fernwhisper. She disappeared four moons after you were born. No body was ever found.",
+      "Nobody talks about it. This is the thing you have always found strangest — not that she vanished, but that the clan decided, quietly and collectively, to stop asking why."
+    ]},
+    ranks:[
+      { rankName:"Kit", unlockStory:null },
+      { rankName:"Apprentice", unlockStory:{
+        title:"What the Elder Knows",
+        pages:[
+          "Your mentor is Brackenthorn — efficient, direct, not unkind but not warm. She pushes you harder than the other mentors push their apprentices.",
+          "You ask why, once. She says: \"Because you can take it.\"",
+          "Three moons in, you are cleaning the elders' den when Cloudfur stops you. She is the oldest cat in camp, and she has not spoken directly to an apprentice in years.",
+          "\"You're the kit Fernwhisper visited,\" she says. Not a question.",
+          "\"I don't remember it,\" you say.\n\n\"No. But she did.\" Cloudfur's tail sweeps the ground. \"She told me what she saw in that dream. She made me promise not to tell anyone.\" A pause. \"She didn't say anything about after she was gone.\""
+        ]},
+        choicePoint:{ id:"arc1_cp1",
+          setup:"Cloudfur leans close. Her voice drops to almost nothing. \"Fernwhisper saw a cat in your dream — standing over the clan like a shadow. A cat she recognized. A cat who is still here.\"\n\nBefore she can say the name, Brackenthorn calls you from across camp.",
+          question:"Cloudfur's eyes say: come back tonight, or tell someone now.",
+          optionA:{ label:"Return to Cloudfur tonight. Hear the name.", short:"You went back for the name",
+            response:"After dark, when the camp is quiet, you slip back to the elders' den.\n\nCloudfur is waiting. She says the name so quietly it is almost just breath.\n\nYou know the cat. Everyone does. That's what makes it impossible." },
+          optionB:{ label:"Tell Brackenthorn what Cloudfur started to say.", short:"You told your mentor",
+            response:"Brackenthorn listens without expression. When you finish she is quiet for a long time.\n\n\"Don't go back to Cloudfur alone,\" she says finally. \"I mean that. Not until I tell you it's safe.\"\n\nShe won't explain why. But she starts watching you differently — protective, careful. Like she knows something she wishes she didn't." }
+        }
+      },
+      { rankName:"Warrior", unlockStory:{
+        title:"The Disappearing Prey",
+        pages:[
+          "{BRANCH_A}The name Cloudfur gave you is Sedgeclaw — a senior warrior, respected, calm, the cat who mentored three of the best fighters in the clan. You watch him now differently. He disappears for an hour every night after moonrise. Always returns from the same direction.|{BRANCH_B}Brackenthorn tells you what she knows in pieces, over the following days. She thinks Fernwhisper didn't disappear. She thinks she was taken — by someone who knew her patrol routes, her habits, her trust. \"I've suspected Sedgeclaw for a long time,\" she says one morning. \"I've never had proof.\"",
+          "Meanwhile the prey is vanishing. Patrols that should return with six pieces come back with two. Apprentices go to sleep hungry.",
+          "You find the first cache by accident — hidden in a hollow log at the border. Eight pieces of fresh-kill. {clan} scent all over them.",
+          "Someone is stealing from their own clan.",
+          "You trace the scent carefully. It leads you — faintly, mixed with leaf-rot and old rain — to pawprints you recognize. Large. Careful. Deliberate.\n\nSedgeclaw's."
+        ]},
+        choicePoint:{ id:"arc1_cp2",
+          setup:"You have found the cache. You have traced the scent. The evidence points one direction. You are a warrior now — what you do next is yours to decide.",
+          question:"How do you handle what you know?",
+          optionA:{ label:"Confront Sedgeclaw directly. Alone.", short:"You faced him alone",
+            response:"You find him at the old lightning-tree at moonrise.\n\n\"I know about the cache,\" you say.\n\nHe turns slowly. His face is not guilty. It is tired. Like something he has been carrying for a long time just got heavier.\n\n\"Sit down,\" he says. \"I need to tell you something about Fernwhisper.\"" },
+          optionB:{ label:"Bring the evidence to the deputy first.", short:"You brought it to the deputy",
+            response:"The deputy's name is Ivyshore — steady, fair, the kind of cat who listens before she speaks.\n\nShe examines the cache. Examines the pawprints. Her face doesn't change.\n\n\"I've suspected for two moons,\" she says quietly. \"I've been waiting for evidence I couldn't argue with.\"\n\nShe pauses. \"There's more to this than stolen prey. Much more.\"" }
+        }
+      },
+      { rankName:"Senior Warrior", unlockStory:{
+        title:"Two Shadows",
+        pages:[
+          "{BRANCH_A}Sedgeclaw talks for a long time. He took the prey — not for himself, but for sick loners living in the old badger set beyond the southern border. Three of them ill, two of them kits. \"Fernwhisper found them first,\" he says. \"She was treating them. When she disappeared, I couldn't let them die.\"|{BRANCH_B}Ivyshore explains: Sedgeclaw has been moving prey to sick loners south of the border. Fernwhisper started it. He continued after she vanished. \"The prey theft is almost a distraction,\" Ivyshore says. \"What matters is why Fernwhisper disappeared the week she found those loners.\"",
+          "The truth comes in pieces like ice breaking on a river.",
+          "There are two things happening. The prey theft — Sedgeclaw, well-intentioned, wrong in method. And Fernwhisper's disappearance — something colder entirely.",
+          "A cat in the clan has been passing information to an organized band of rogues mapping territory weaknesses for three seasons. Fernwhisper found the evidence. Fernwhisper was silenced.",
+          "The cat who silenced her is still in camp. Eating at the fresh-kill pile. Sitting at Gatherings. Sleeping thirty tail-lengths from where you sleep.\n\nAnd they know someone is getting close."
+        ]},
+        choicePoint:null
+      },
+      { rankName:"Deputy", unlockStory:{
+        title:"Beyond the Border",
+        pages:[
+          "The evidence points outward — the rogue group operates from a base beyond clan territory, in abandoned human structures at the forest's edge. No clan cat goes there willingly.",
+          "\"I need someone who can go unnoticed,\" your leader says. \"Someone the rogues don't know.\"\n\n\"I'll go,\" you say.",
+          "The journey takes a day and a half. You travel with no clan scent, belly low. The human place smells of metal and things you have no names for.",
+          "You find the rogue camp in an abandoned structure. Alongside their maps and stolen intelligence, you find something that stops your heart:",
+          "Fernwhisper's medicine bag. Intact. Dusty. Everything still inside.\n\nShe was here. She survived — at least for a while."
+        ]},
+        choicePoint:{ id:"arc1_cp3",
+          setup:"You have proof of the rogue operation — names, maps, enough to expose the traitor and dismantle the network. But in the corner of the rogue camp, a young cat stirs awake, frightened. She's clearly not the leader here. She's just a follower. She might know where Fernwhisper went. Or she might raise the alarm before you can escape.",
+          question:"You have one chance to get this right.",
+          optionA:{ label:"Take the evidence and run. Don't risk the alarm.", short:"You took the evidence and ran",
+            response:"You move quickly. The medicine bag across your back. The bark-maps in your teeth.\n\nYou are three fox-lengths from the exit when something shifts in the shadows.\n\nYou run. They follow — but not as fast. You know forest. They know rubble.\n\nYou make it. Barely. The medicine bag makes it with you." },
+          optionB:{ label:"Wake the young rogue. Take the risk.", short:"You woke the young rogue",
+            response:"She startles awake — fear in her eyes, then something else when she sees you're alone.\n\n\"I'm looking for a medicine cat named Fernwhisper,\" you say quietly.\n\nThe fear shifts. Becomes complicated.\n\n\"She was here,\" the young cat says. \"She left three moons ago. She said — if anyone came looking, tell them: she went north. She went to find the source.\"" }
+        }
+      },
+      { rankName:"Leader", unlockStory:{
+        title:"What the Dark Costs",
+        pages:[
+          "{BRANCH_A}The evidence is enough. The traitor is brought before the clan. The confrontation is not dramatic — it is simply sad. He doesn't deny it. He explains, in a flat voice, that it made sense at the time, and now it doesn't, and he's not sure when that changed.\n\nHe is exiled at moonrise. He walks out without looking back.|{BRANCH_B}Fernwhisper went north — to find the center of the rogue intelligence network. You bring this to your leader. She is quiet for a long time.\n\n\"We can't go after her. Not now.\"\n\n\"I know,\" you say.\n\nBut you both know that \"not now\" is doing a lot of work in that sentence. And that north is a direction with a long memory.",
+          "The clan heals slowly. The loners are relocated by the new medicine cat. The season turns.",
+          "You lead your first full patrol on a cold, clear morning. One of your warriors asks halfway through: \"Do you think Fernwhisper is alive?\"",
+          "You think about the medicine bag. You think about the word north. You think about a dream you can't remember from three days after you were born.",
+          "\"Yes,\" you say. \"I think she's alive.\"\n\nYou don't say: I think she needs us.\n\nBut you think it. And the patrol continues, and the forest watches, and somewhere to the north something ancient stirs in the long dark."
+        ]},
+        choicePoint:null
+      }
+    ],
+    breadcrumbs:[
+      "Cloudfur watched you leave camp this morning from the elders' den entrance. She didn't call out. She just watched.",
+      "The prey shortage has everyone on edge. Two warriors nearly fought at the fresh-kill pile before the deputy intervened. Nobody mentions it afterward.",
+      "You found fox tracks near the apprentices' training ground. Recent. Brackenthorn said to report it and keep going.",
+      "Beechpaw the medicine cat has been up three nights running. You brought him a piece of fresh-kill. He looked at it like he'd forgotten what food was.",
+      "The moon was completely dark last night. The elders say it means nothing. Their voices are very convincing.",
+      "A loner was spotted at the northern border — not threatening, just watching. Gone by the time a patrol arrived.",
+      "You had a dream you couldn't hold onto. A scent you recognized and a sound like running water and a name just at the edge of hearing.",
+      "Three cats in camp have the same cough this week. The medicine cat says it isn't serious. He checks them twice anyway.",
+      "Brackenthorn ran you through the same battle sequence fourteen times. On the fifteenth you finally felt it — the shift in weight, the moment before the move.",
+      "Something dug near the old lightning-tree last night. Deep, deliberate. Nobody knows what it was looking for.",
+      "A Gathering message came but your clan isn't sending a full delegation. Whisper says there's been a border incident. The deputy's face gives nothing away.",
+      "You found a single pawprint in the mud near the medicine storage. Too large for a clan cat, too small for a dog. The medicine cat covered it with moss."
+    ]
+  },
+
+  arc2: {
+    title:"The Gathering Storm", subtitle:"Arc III", emoji:"⚡",
+    desc:"A warrior is falsely accused. An enemy hides among allies. Truth has collateral damage.",
+    intro:{ pages:[
+      "The accusation is made at a Gathering, which means every cat in all four clans hears it at once.",
+      "Tigershade — senior warrior, {clan}, twenty seasons of service — stands in the Great Circle while a ShadowClan deputy says, in a clear carrying voice: \"This cat has been crossing into our territory and taking prey. We have witnessed it three times.\"",
+      "Before anyone speaks, a RiverClan warrior adds: \"We have the same evidence. Different locations. Same cat.\"",
+      "The silence at Fourtrees is the loudest thing you have ever heard.",
+      "You look at Tigershade. He is standing very still — which is either guilt or shock. You have trained beside this cat for two seasons. You have trusted him with your life.",
+      "You believe him innocent. You have no idea how to prove it.\n\nAnd the moon watches everything and says nothing."
+    ]},
+    ranks:[
+      { rankName:"Kit", unlockStory:null },
+      { rankName:"Apprentice", unlockStory:{
+        title:"The Shape of the Lie",
+        pages:[
+          "Your mentor is Dawnpelt — quick, politically sharp, the kind of cat who can read a Gathering from across the clearing just by watching ears and tails.",
+          "\"Someone is lying,\" she tells you the morning after the accusation. \"The question is: what shape is the lie?\"",
+          "You start watching. The ShadowClan patrols position themselves slightly more aggressively than their routes require. The RiverClan witnesses gave testimony in almost identical phrasing — like they had practiced it.",
+          "\"Mentors notice when their apprentices are doing something other than training,\" Dawnpelt says one evening.",
+          "\"I'm always training,\" you say.\n\nShe gives you a look that means: good answer, but I see you."
+        ]},
+        choicePoint:{ id:"arc2_cp1",
+          setup:"A cat finds you during the midday rest — Minnowleap, a young RiverClan warrior from the Gathering. She is nervous. \"I was told what to say about Tigershade. The scent. The locations. I was told what to say and I said it and I'm not sure I should have.\"\n\nShe adds: \"I can't go to my own leader. I need someone who isn't RiverClan.\"",
+          question:"She is asking you to carry something dangerous.",
+          optionA:{ label:"Take her to Dawnpelt. Don't handle this alone.", short:"You brought Dawnpelt in",
+            response:"Dawnpelt listens to Minnowleap without interrupting. When the RiverClan warrior finishes, Dawnpelt is quiet for a moment.\n\n\"You did the right thing. Both of you.\"\n\nAfterward she tells you: \"This is bigger than Tigershade. Someone orchestrated this. We need to know who and why before we move.\"" },
+          optionB:{ label:"Handle it yourself. Keep Minnowleap protected.", short:"You kept it between you",
+            response:"\"You were brave to find me,\" you tell Minnowleap. \"Don't talk to anyone else. I'll find a way to use this without putting your name on it.\"\n\nShe looks uncertain but nods. After she leaves you stand in the ferns feeling the weight of what you just agreed to.\n\nDawnpelt notices something changed in you. She doesn't press. But she starts including you in conversations she'd normally have only with senior warriors." }
+        }
+      },
+      { rankName:"Warrior", unlockStory:{
+        title:"Alliance",
+        pages:[
+          "{BRANCH_A}Dawnpelt moves quickly. Within a half-moon she has built a quiet information network — a WindClan elder who noticed the accusations were too coordinated, a ShadowClan apprentice who overheard her mentor being coached on testimony.|{BRANCH_B}Working alone is slower. You trade small pieces of information carefully — border gossip, training observations — building trust across clan lines without ever asking a direct question. Minnowleap helps more than you expected. She is frightened. But she is also angry, and anger, channeled carefully, is useful.",
+          "The picture forming: a cat — or cats — who benefit from {clan} being isolated. Who need the other clans angry at you before making a larger move.",
+          "Tigershade has been confined to camp pending clan judgment. He accepts this without protest, which worries you more than anger would.",
+          "\"Innocent cats fight,\" you say.\n\n\"Not always,\" comes the answer. \"Some are too tired. Or too proud. Or they believe the system will find them eventually.\"\n\nYou think about this for a long time."
+        ]},
+        choicePoint:{ id:"arc2_cp2",
+          setup:"You've identified the likely architect: Brackenfur, a ShadowClan warrior with a territorial dispute against {clan} going back four seasons. Motive, access, connections. But you have evidence, not proof. And Tigershade himself has been refusing to speak in his own defense. You think he knows more than he's saying.",
+          question:"How do you get him to talk?",
+          optionA:{ label:"Show him everything you've found. Trust him fully.", short:"You showed Tigershade everything",
+            response:"He listens for a long time. When you finish he looks at nothing in particular.\n\n\"You've been busy,\" he says.\n\n\"Someone had to be.\"\n\nA long pause. Then: \"I haven't defended myself because it would require explaining something I didn't want to explain. But I think you've already figured part of it out.\"\n\n\"Brackenfur and I have a history,\" he says. \"Before he was ShadowClan's problem, he was ours.\"" },
+          optionB:{ label:"Ask only what he's protecting. Don't show your hand.", short:"You asked what he was hiding",
+            response:"\"What makes you think I'm protecting something?\"\n\n\"Because innocent cats who won't defend themselves always are,\" you say. \"Either themselves or someone else. And you don't seem like the kind of cat who protects himself at others' expense.\"\n\nSomething shifts in his face. \"Sit down,\" he says. \"This is going to take a while.\"" }
+        }
+      },
+      { rankName:"Senior Warrior", unlockStory:{
+        title:"What Tigershade Knew",
+        pages:[
+          "Tigershade's secret is not what you expected.",
+          "He has been meeting with Brackenfur. Secretly. Not as enemies — as cats trying to resolve the territorial dispute that has poisoned relations between {clan} and ShadowClan for four seasons.",
+          "\"It was working,\" Tigershade says. \"Two moons ago we had an agreement. Border adjustment, prey rights. We were going to bring it to our leaders together.\"",
+          "\"What happened?\"\n\n\"Someone found out. Someone who didn't want the dispute resolved.\" He closes his eyes. \"Brackenfur didn't make the accusation willingly. He was told to. The evidence was fabricated by a third party — someone who benefits from us staying hostile.\"",
+          "\"Then Brackenfur is a victim too,\" you say.\n\n\"Yes,\" Tigershade says. \"And he's terrified. Which makes him dangerous.\""
+        ]},
+        choicePoint:null
+      },
+      { rankName:"Deputy", unlockStory:{
+        title:"The Third Party",
+        pages:[
+          "The third party takes another half-moon to trace. They are good at being invisible — no clan affiliation, operating through favors and old debts.",
+          "The name, when you find it, is Hailstrike. A former medicine cat's apprentice, cast out before full training, now running an intelligence network across all four clans.",
+          "His leverage is information — border weaknesses, disputed territories, cats who have done things their leaders don't know about. He manufactures conflict. He sells the fallout.",
+          "He fabricated the testimony against Tigershade because {clan} had stumbled close to discovering his network. He needed you isolated and discredited first.",
+          "\"He's afraid of us,\" your deputy says when you bring the report.\n\n\"He's also had four seasons to build this,\" you say.\n\n\"Both things are true,\" she agrees."
+        ]},
+        choicePoint:{ id:"arc2_cp3",
+          setup:"You have full evidence — enough to clear Tigershade and expose Hailstrike completely. But exposing Hailstrike publicly means also revealing that {clan} ran a cross-clan investigation, that Minnowleap broke RiverClan confidence to help you, and that Tigershade and Brackenfur were secretly negotiating without their leaders' approval.\n\nThe truth has collateral damage. Your leader asks what you recommend.",
+          question:"How much of the truth do you show?",
+          optionA:{ label:"Full disclosure at the Gathering. Every cat hears everything.", short:"You told the full truth",
+            response:"\"The clans deserve to know,\" you say. \"All of it. Even the parts that make us look complicated.\"\n\nYour leader holds your gaze. \"You understand this could embarrass us as much as it helps us.\"\n\n\"Honesty that only costs others something isn't really honesty,\" you say.\n\nShe is quiet for a long time. Then she nods." },
+          optionB:{ label:"Quiet resolution. Clear Tigershade, neutralize Hailstrike, protect the rest.", short:"You chose a quiet resolution",
+            response:"\"If we expose Minnowleap, she becomes a target,\" you say. \"If we expose Tigershade's negotiation, any future unofficial diplomacy becomes impossible.\"\n\n\"And Hailstrike?\"\n\n\"Handled privately. One chance to dismantle the network. If he refuses, we make it impossible to operate in secret — visible, not destroyed.\"\n\n\"That's a more sophisticated solution than I expected,\" she says.\n\n\"I've had good teachers,\" you say." }
+        }
+      },
+      { rankName:"Leader", unlockStory:{
+        title:"The Verdict at Fourtrees",
+        pages:[
+          "{BRANCH_A}The Gathering is the fullest you've ever seen. You speak for a long time — naming every cat, including {clan} warriors, including Minnowleap, including the secret negotiation. Laying it all flat.\n\nThe silence afterward is different from the silence after the accusation. That was shock. This is four clans recalibrating.\n\nTigershade is cleared before the moon reaches its peak. Brackenfur looks like something put down a weight he's been carrying for months. Hailstrike is never seen in clan territory again.|{BRANCH_B}Three private meetings over one quarter-moon. Leaders only, plus you. Tigershade is cleared. Brackenfur's involvement is acknowledged to his own leader privately. Minnowleap is never mentioned officially.\n\nHailstrike dismantles the network. Two of his informants are exposed; the rest are warned and watched.\n\nIt is imperfect. It is livable. It holds.",
+          "The border between {clan} and ShadowClan is adjusted. Quietly. Both sides get something.",
+          "Tigershade finds you the morning after. He sits beside you at the camp entrance and watches the dawn for a while.",
+          "\"I should have trusted the clan,\" he says eventually.\n\n\"You trusted the process,\" you say. \"That's not nothing.\"\n\n\"Someone trusted me more than I deserved.\" He means you.",
+          "That night StarClan sends you a dream — just sound. Four clan voices speaking at once, not in argument. In something that doesn't have a name in any language cats use.\n\nYou wake in the dark, the camp entirely, peacefully yours.\n\nYou are {name} of {clan}. You earned that name in fire, in darkness, in the complicated work of loyalty and truth.\n\nYou carry it well."
+        ]},
+        choicePoint:null
+      }
+    ],
+    breadcrumbs:[
+      "Tigershade sat alone at the fresh-kill pile. Three cats walked past without meeting his eyes. One stopped and sat beside him. You noted which one.",
+      "The ShadowClan border markers have been moved three tail-lengths into {clan} territory. The deputy says to note it, not to challenge it. Not yet.",
+      "Dawnpelt ran you through a loyalty scenario today — not a battle scenario. What do you do when two things you owe allegiance to want different things? You didn't have a clean answer. She said that was correct.",
+      "A traveling cat passed through under guest-right. She said nothing useful and saw everything. You watched her watching and said nothing.",
+      "The RiverClan deputy was seen speaking to the ShadowClan deputy at the border, away from their patrols. Nobody knows what they said. Everybody is thinking about it.",
+      "You overheard two elders debating whether the warrior code has always been applied consistently or only when convenient. They stopped when they noticed you. You kept walking.",
+      "Minnowleap left fresh-kill at the border stone. No marking. You know who it's from.",
+      "A Gathering is coming. Every senior warrior in camp has the particular careful face cats make when preparing for something they don't fully control.",
+      "Brackenfur's patrol came unusually close to the border today. Not across — exactly not across. A message in proximity.",
+      "Your leader called three senior warriors into her den last night. You are not one of them. You are not sure what that means.",
+      "The moon is three nights from full. The camp feels like the air before lightning — charged, waiting, inevitable."
+    ]
+  },
+
+  dailyLore:{
+    ThunderClan:[
+      "A thrush sang three times at dawn from the top of the great oak. The elders called it lucky. Your mentor said nothing, but she was smiling.",
+      "The oak leaves are turning early this season. The forest doesn't explain itself.",
+      "Lightning split a birch at the forest edge last night. By morning three apprentices had already dared each other to touch the mark it left.",
+      "The camp smells of rain-on-stone this morning, which is the best smell the forest makes. Even the deputy seemed almost happy.",
+      "A kit asked you what StarClan looks like. You said you didn't know. She looked at you like you'd said something interesting rather than something obvious.",
+      "Prey ran well today. Even the elders ate first without anyone suggesting they should. It was that kind of day.",
+      "The wind shifted at midnight. West to east, which the elders say always means change. You lay awake listening to it move through the canopy.",
+      "Dawn came in at an angle that turned everything copper for three minutes. Then it was just morning. But for three minutes it was something else."
+    ],
+    RiverClan:[
+      "The river is running higher than last moon. The stepping stones are half-covered. The kits were warned away from the bank, which means three of them spent the morning watching it from exactly as close as permitted.",
+      "A heron stood at the shallows for most of the morning. By the time a patrol moved it along, it had already eaten twice.",
+      "The water smells of upstream today — cold rock and snowmelt, even in this season. The elders say the mountains had rain last night.",
+      "A kit fell in the river this morning. She was fine — RiverClan kits float better than they think they do.",
+      "The reeds along the eastern bank are going to seed. Every patrol comes back with seeds in their fur.",
+      "Moonhigh on a still night, the river reflects the stars so clearly you can't tell which is the water and which is the sky.",
+      "The fishing has been extraordinary this quarter-moon. The most interesting theory involves StarClan directly, which the medicine cat discourages but doesn't quite deny.",
+      "A clan cat who has swum since before they could walk still sometimes stands at the bank at night and watches the current. The water is never the same twice. That's the thing about rivers."
+    ],
+    WindClan:[
+      "The wind was strong enough last night to flatten the heather. By morning it had sprung back. The moor is like that — it bends but it doesn't break.",
+      "You can see three territories from the top of the ridge on a clear morning. The clans look different from above — smaller, more particular.",
+      "A hawk circled camp for an hour. The apprentices kept low. The elders watched it with the kind of attention that is almost admiration.",
+      "Running on the moor at dawn, when the ground is cold and the air is clean and nothing has happened yet — this is the thing other clans don't understand about WindClan.",
+      "The heather is blooming early. Purple across the whole hillside. Even the grumpiest elder went out to sit in it.",
+      "Wind brings sound from far away if you know how to listen — a distant patrol, rain still an hour out. The moor teaches patience with news.",
+      "A rabbit outsmarted two apprentices for almost a quarter hour before the third caught it. Everyone found this funnier than the mentor did.",
+      "The sky over the moor in late afternoon turns everything gold and horizontal. The elders call it the moor's gift."
+    ],
+    ShadowClan:[
+      "The pine forest at night is a different world. The shadows between the trees have depth. Things move in them that may not be there in daylight.",
+      "A ShadowClan kit's first lesson is: be still. The second is: be still longer than you think you need to. The third comes when the prey walks past.",
+      "The pine needles on the ground are so thick in the old forest you can walk without a sound. Some cats find this unsettling. ShadowClan cats find the alternative unsettling.",
+      "Fog came in from the north this morning and didn't leave until sunhigh. The camp was an island in it.",
+      "A kittypet looked into the territory from the Twoleg border. Made eye contact with a senior warrior. Decided to look elsewhere.",
+      "The dark is not empty. It is full of things that have learned to live in it. The dark rewards those who stop fearing it and start studying it.",
+      "An owl called three times from the east pine last night. The medicine cat noted it and said nothing. She has been noting a lot of things and saying nothing.",
+      "You can smell a storm coming two days before it arrives if you've lived in the pines long enough. The resin changes. You've learned to enjoy the two days more, knowing what's coming."
+    ]
+  }
+};
+
+const PATROL_INTROS = [
+  { title:"The Border Calls", quote:"\"Borders are marked by those willing to walk them.\"" },
+  { title:"Moonrise Patrol", quote:"\"StarClan watches those who train when others sleep.\"" },
+  { title:"Dawn Hunt", quote:"\"The sharpest claw is the one you've been honing all season.\"" },
+  { title:"The Territory Runs", quote:"\"Know your ground better than any enemy could.\"" },
+  { title:"Night Watch", quote:"\"Courage is not the absence of fear. It is acting despite it.\"" },
+  { title:"First Light", quote:"\"Every warrior was once a kit who refused to give up.\"" },
+  { title:"The Long Patrol", quote:"\"Strength comes from the patrols nobody sees you run.\"" }
+];
+
+// ════════════════════════════════════════════
+// CONSTANTS
+// ════════════════════════════════════════════
+const RANKS = [
+  { name:'Kit',           xp:0    },
+  { name:'Apprentice',    xp:400  },
+  { name:'Warrior',       xp:1000 },
+  { name:'Senior Warrior',xp:2000 },
+  { name:'Deputy',        xp:3500 },
+  { name:'Leader',        xp:5500 },
+];
+
+const OPS = ['add','sub','mul','div'];
+const OP_LABELS = { add:'Addition', sub:'Subtraction', mul:'Multiplication', div:'Division' };
+const CIRC_TIMER = 144.5;
+const CIRC_SCORE = 351.86;
+
+// ════════════════════════════════════════════
+// STATE
+// ════════════════════════════════════════════
+let G = {
+  // Global (persist forever)
+  onboarded: false,
+  clan: '', cat: '', warriorName: '',
+  totalPatrols: 0,
+  bestScore: 0,
+  bestAccuracy: 0,
+  totalMastered: 0,
+  masteryHits: { add:{}, sub:{}, mul:{}, div:{} },
+  missWeights:  { add:{}, sub:{}, mul:{}, div:{} },
+  streak: 0,
+  lastPatrolDate: '',
+  seenDailyLore: [],
+
+  // Arc progress
+  currentArc: 0,
+  arcsUnlocked: [true, false, false],
+  arcsCompleted: { 0:0, 1:0, 2:0 }, // completion count per arc
+
+  // Per-playthrough (reset when starting new arc/replay)
+  xp: 0,
+  rankIndex: 0,
+  storyProgress: 0,        // which rank story we've seen (0=kit intro shown, 1=apprentice shown, etc.)
+  choices: {},             // { arc0_cp1:'A', arc0_cp2:'B', ... }
+  breadcrumbsSeen: [],     // indices into arc breadcrumbs already shown
+  seenIntro: false,        // has this playthrough's intro been shown?
+  patrolHistory: [],       // scores for last 7 patrols (per-playthrough)
+};
+
+// Patrol runtime (never persisted)
+let P = {
+  questions: [], current: 0, score: 0, correct: 0,
+  answer: '', timerInterval: null, timeLeft: 8, locked: false,
+  rankAtStart: 0, xpAtStart: 0,
+};
+
+// Cinematic runtime
+let CIN = {
+  pages: [], pageIndex: 0,
+  onComplete: null,
+};
+
+// ════════════════════════════════════════════
+// PERSISTENCE
+// ════════════════════════════════════════════
+function save() {
+  try { localStorage.setItem('clans_v2', JSON.stringify(G)); } catch(e) {}
+}
+function load() {
+  try {
+    const raw = localStorage.getItem('clans_v2');
+    if (raw) {
+      const saved = JSON.parse(raw);
+      // Deep merge carefully
+      G = Object.assign(G, saved);
+      // Ensure nested objects exist
+      if (!G.masteryHits) G.masteryHits = {add:{},sub:{},mul:{},div:{}};
+      if (!G.missWeights)  G.missWeights  = {add:{},sub:{},mul:{},div:{}};
+      OPS.forEach(op => {
+        if (!G.masteryHits[op]) G.masteryHits[op] = {};
+        if (!G.missWeights[op])  G.missWeights[op]  = {};
+      });
+      if (!G.choices) G.choices = {};
+      if (!G.breadcrumbsSeen) G.breadcrumbsSeen = [];
+      if (!G.seenDailyLore) G.seenDailyLore = [];
+      if (!G.patrolHistory) G.patrolHistory = [];
+      if (!G.arcsCompleted) G.arcsCompleted = {0:0,1:0,2:0};
+      if (!G.arcsUnlocked) G.arcsUnlocked = [true,false,false];
+    }
+  } catch(e) {}
+}
+
+// ════════════════════════════════════════════
+// SCREEN MANAGEMENT
+// ════════════════════════════════════════════
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('screen-'+id).classList.add('active');
+}
+
+// ════════════════════════════════════════════
+// TEXT SUBSTITUTION
+// ════════════════════════════════════════════
+function sub(text, choiceKey) {
+  if (!text) return '';
+  let t = text
+    .replace(/\{name\}/g, G.warriorName || 'Warrior')
+    .replace(/\{clan\}/g, G.clan || 'your clan');
+
+  // Handle branch variants: {BRANCH_A}...text...|{BRANCH_B}...text...
+  t = t.replace(/\{BRANCH_A\}([\s\S]*?)\|\{BRANCH_B\}([\s\S]*?)(?=\n|$)/g, (_, a, b) => {
+    const cpKey = choiceKey || getCurrentChoiceContext();
+    const choice = G.choices[cpKey];
+    return choice === 'B' ? b.trim() : a.trim();
+  });
+
+  return t;
+}
+
+function getCurrentChoiceContext() {
+  // Return the most recent choice point ID for the current arc
+  const arc = STORY['arc' + G.currentArc];
+  let lastCp = null;
+  arc.ranks.forEach(r => { if (r.choicePoint) lastCp = r.choicePoint.id; });
+  return lastCp;
+}
+
+// ════════════════════════════════════════════
+// CINEMATIC SYSTEM
+// ════════════════════════════════════════════
+function showCinematic({ eyebrow, title, pages, onComplete, showSkip=true }) {
+  CIN.pages = pages;
+  CIN.pageIndex = 0;
+  CIN.onComplete = onComplete;
+
+  document.getElementById('cinEyebrow').textContent = eyebrow || '';
+  document.getElementById('cinTitle').textContent = title || '';
+
+  // Build dots
+  const dotsEl = document.getElementById('cinDots');
+  dotsEl.innerHTML = '';
+  pages.forEach((_, i) => {
+    const d = document.createElement('div');
+    d.className = 'cin-dot' + (i === 0 ? ' active' : '');
+    dotsEl.appendChild(d);
+  });
+
+  document.querySelector('.btn-cin-skip').style.display = showSkip ? '' : 'none';
+
+  renderCinPage(0);
+  showScreen('cinematic');
+}
+
+function renderCinPage(idx) {
+  const area = document.getElementById('cinTextArea');
+  area.innerHTML = '';
+
+  const page = document.createElement('div');
+  page.className = 'cin-page active';
+
+  const text = sub(CIN.pages[idx]);
+  const paragraphs = text.split('\n').filter(p => p.trim());
+  paragraphs.forEach((p, i) => {
+    const el = document.createElement('div');
+    el.className = 'cin-paragraph';
+    el.textContent = p;
+    page.appendChild(el);
+    setTimeout(() => el.classList.add('visible'), 80 + i * 120);
+  });
+
+  area.appendChild(page);
+
+  // Update dots
+  document.querySelectorAll('.cin-dot').forEach((d, i) => {
+    d.classList.toggle('active', i === idx);
+  });
+
+  // Update continue button
+  const btn = document.getElementById('cinContinueBtn');
+  btn.textContent = (idx === CIN.pages.length - 1) ? 'Continue →' : 'Next →';
+}
+
+function cinNextPage() {
+  if (CIN.pageIndex < CIN.pages.length - 1) {
+    CIN.pageIndex++;
+    renderCinPage(CIN.pageIndex);
+  } else {
+    cinFinish();
+  }
+}
+
+function cinSkip() {
+  cinFinish();
+}
+
+function cinFinish() {
+  if (CIN.onComplete) CIN.onComplete();
+}
+
+// ════════════════════════════════════════════
+// CHOICE SYSTEM
+// ════════════════════════════════════════════
+function showChoice(choicePoint, onComplete) {
+  document.getElementById('choiceCat').textContent = G.cat || '🐱';
+  document.getElementById('choiceSetup').textContent = sub(choicePoint.setup);
+  document.getElementById('choiceQuestion').textContent = sub(choicePoint.question);
+
+  const optsEl = document.getElementById('choiceOptions');
+  optsEl.innerHTML = '';
+
+  ['A','B'].forEach(letter => {
+    const opt = letter === 'A' ? choicePoint.optionA : choicePoint.optionB;
+    const btn = document.createElement('button');
+    btn.className = 'choice-btn';
+    btn.innerHTML = `<span class="choice-arrow">${letter === 'A' ? '🐾' : '⚡'}</span><span>${opt.label}</span>`;
+    btn.onclick = () => {
+      G.choices[choicePoint.id] = letter;
+      save();
+      // Show the response in a cinematic
+      showCinematic({
+        eyebrow: 'Your choice',
+        title: opt.short,
+        pages: [sub(opt.response)],
+        onComplete: onComplete,
+        showSkip: false
+      });
+    };
+    optsEl.appendChild(btn);
+  });
+
+  showScreen('choice');
+}
+
+// ════════════════════════════════════════════
+// ARC SELECT
+// ════════════════════════════════════════════
+function showArcSelect() {
+  const container = document.getElementById('arcCards');
+  container.innerHTML = '';
+
+  ['arc0','arc1','arc2'].forEach((key, i) => {
+    const arc = STORY[key];
+    const unlocked = G.arcsUnlocked[i];
+    const completed = G.arcsCompleted[i] || 0;
+    const isCurrent = G.currentArc === i;
+
+    const card = document.createElement('div');
+    card.className = 'arc-card ' + (unlocked ? (completed > 0 ? 'completed' : 'unlocked') : 'locked');
+
+    let status = '';
+    if (!unlocked) status = '🔒 Complete the previous arc to unlock';
+    else if (isCurrent) status = completed > 0 ? `▶ Playing — Completed ${completed}x` : '▶ Currently Playing';
+    else if (completed > 0) status = `✓ Completed ${completed}x — Play again?`;
+    else status = 'Ready to begin';
+
+    card.innerHTML = `
+      <div class="arc-emoji">${arc.emoji}</div>
+      <div class="arc-info">
+        <div class="arc-subtitle">${arc.subtitle}</div>
+        <div class="arc-name">${arc.title}</div>
+        <div class="arc-desc">${arc.desc}</div>
+        <div class="arc-status">${status}</div>
+      </div>
+      ${!unlocked ? '<div class="arc-lock">🔒</div>' : ''}
+    `;
+
+    if (unlocked) {
+      card.onclick = () => selectArc(i);
+    }
+
+    container.appendChild(card);
+  });
+
+  showScreen('arcselect');
+}
+
+function selectArc(arcIndex) {
+  if (!G.arcsUnlocked[arcIndex]) return;
+
+  if (G.currentArc === arcIndex && G.rankIndex < RANKS.length - 1) {
+    // Same arc, in progress — just go home
+    showScreen('home');
+    return;
+  }
+
+  // Start new arc / replay
+  G.currentArc = arcIndex;
+  G.xp = 0;
+  G.rankIndex = 0;
+  G.storyProgress = 0;
+  G.choices = {};
+  G.breadcrumbsSeen = [];
+  G.seenIntro = false;
+  G.patrolHistory = [];
+  save();
+  applyProfile();
+  updateHomeUI();
+
+  // Show arc intro cinematic
+  const arc = STORY['arc' + arcIndex];
+  showCinematic({
+    eyebrow: arc.subtitle + ' — ' + arc.title,
+    title: 'A New Story Begins',
+    pages: arc.intro.pages.map(p => sub(p)),
+    onComplete: () => {
+      G.seenIntro = true;
+      save();
+      showScreen('home');
+    }
+  });
+}
+
+// ════════════════════════════════════════════
+// ONBOARDING
+// ════════════════════════════════════════════
+let _selClan = '', _selCat = '';
+
+function selectClan(el) {
+  document.querySelectorAll('.clan-card').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+  _selClan = el.dataset.clan;
+  document.body.className = _selClan;
+  document.getElementById('btnClanNext').disabled = false;
+}
+
+function selectCat(el) {
+  document.querySelectorAll('.cat-opt').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+  _selCat = el.dataset.cat;
+  document.getElementById('btnCatNext').disabled = false;
+}
+
+function onNameInput() {
+  const v = document.getElementById('nameInput').value.trim();
+  document.getElementById('btnNameNext').disabled = v.length < 2;
+}
+
+function goStep(step) {
+  document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
+  document.getElementById('step-'+step).classList.add('active');
+}
+
+function completeOnboarding() {
+  const name = document.getElementById('nameInput').value.trim();
+  if (!name || !_selClan || !_selCat) return;
+
+  G.onboarded = true;
+  G.clan = _selClan;
+  G.cat = _selCat;
+  G.warriorName = name;
+  save();
+
+  applyProfile();
+  updateHomeUI();
+
+  // Show arc 0 intro
+  const arc = STORY.arc0;
+  showCinematic({
+    eyebrow: arc.subtitle + ' — ' + arc.title,
+    title: 'Your Story Begins',
+    pages: arc.intro.pages.map(p => sub(p)),
+    onComplete: () => {
+      G.seenIntro = true;
+      save();
+      showScreen('home');
+    }
+  });
+}
+
+// ════════════════════════════════════════════
+// PROFILE & HOME UI
+// ════════════════════════════════════════════
+function applyProfile() {
+  document.body.className = G.clan;
+  document.getElementById('homeAvatar').textContent = G.cat;
+  document.getElementById('homeName').textContent = G.warriorName;
+}
+
+function updateHomeUI() {
+  // Streak
+  document.getElementById('streakNum').textContent = G.streak;
+
+  // Arc indicator
+  const arc = STORY['arc' + G.currentArc];
+  document.getElementById('arcIndEmoji').textContent = arc.emoji;
+  document.getElementById('arcIndName').textContent = arc.title;
+
+  // Rank
+  const rank = RANKS[G.rankIndex];
+  const nextRank = RANKS[G.rankIndex + 1];
+  document.getElementById('rankName').textContent = rank.name;
+  const xpInRank = G.xp - rank.xp;
+  const xpNeeded = nextRank ? nextRank.xp - rank.xp : 1;
+  const pct = nextRank ? Math.min(100, Math.round((xpInRank / xpNeeded) * 100)) : 100;
+  document.getElementById('rankBarFill').style.width = pct + '%';
+  document.getElementById('rankXpLabel').textContent = G.xp + ' XP';
+  document.getElementById('rankNextLabel').textContent = nextRank ? '→ ' + nextRank.name : '⭐ Max Rank';
+
+  // Journey graph
+  renderJourneyGraph();
+
+  // Nudge
+  const today = todayStr();
+  const nudge = document.getElementById('nudgeBanner');
+  nudge.classList.toggle('show', G.lastPatrolDate !== today);
+
+  // Stats
+  document.getElementById('statPatrols').textContent = G.totalPatrols;
+  document.getElementById('statBestAcc').textContent = G.bestAccuracy > 0 ? G.bestAccuracy + '%' : '—';
+  document.getElementById('statMastered').textContent = G.totalMastered;
+  document.getElementById('statBestScore').textContent = G.bestScore > 0 ? G.bestScore : '—';
+
+  // Badges
+  updateBadges();
+
+  // History
+  renderHistoryBars();
+}
+
+function renderJourneyGraph() {
+  const graph = document.getElementById('journeyGraph');
+  const ranksEl = document.getElementById('journeyRanks');
+  if (!graph || !ranksEl) return;
+
+  graph.innerHTML = '';
+  ranksEl.innerHTML = '';
+
+  const n = RANKS.length; // 6 nodes
+
+  // Fill bar = actual XP progress (proportional to total XP needed)
+  const totalXp = RANKS[n-1].xp; // 5500
+  const fillPct = Math.min(100, Math.round((G.xp / totalXp) * 100));
+  const fill = document.createElement('div');
+  fill.className = 'journey-track-fill';
+  fill.style.width = fillPct + '%';
+  graph.appendChild(fill);
+
+  // Nodes evenly spaced: i / (n-1) * 100%
+  RANKS.forEach((rank, i) => {
+    const leftPct = (i / (n - 1)) * 100;
+    const node = document.createElement('div');
+    node.className = 'journey-node';
+    node.style.left = leftPct + '%';
+    if (i < G.rankIndex)      node.classList.add('done');
+    else if (i === G.rankIndex) node.classList.add('current');
+    graph.appendChild(node);
+
+    // Label — just append in order, space-between handles alignment
+    const lbl = document.createElement('div');
+    lbl.className = 'journey-rank-lbl' + (i === G.rankIndex ? ' current-rank' : '');
+    lbl.textContent = rank.name.split(' ')[0]; // first word only: Kit, Apprentice, Warrior, Senior, Deputy, Leader
+    ranksEl.appendChild(lbl);
+  });
+}
+
+
+function updateBadges() {
+  const maxFacts = { add:121, sub:121, mul:100, div:100 };
+  OPS.forEach(op => {
+    const hits = G.masteryHits[op] || {};
+    const partialTotal = Object.keys(hits).reduce((sum, k) => {
+      return sum + Math.min(1, (hits[k] || 0) / 3);
+    }, 0);
+    const pct = Math.round((partialTotal / maxFacts[op]) * 100);
+    const capId = op.charAt(0).toUpperCase() + op.slice(1);
+    document.getElementById('pct' + capId).textContent = pct + '%';
+    document.getElementById('badge' + capId).classList.toggle('earned', pct >= 80);
+  });
+}
+
+function renderHistoryBars() {
+  const container = document.getElementById('historyBars');
+  container.innerHTML = '';
+  const hist = [...G.patrolHistory].slice(-7);
+  while (hist.length < 7) hist.unshift(null);
+  const days = ['S','M','T','W','T','F','S'];
+  const todayDay = new Date().getDay();
+  hist.forEach((score, i) => {
+    const dayIdx = (todayDay - (6 - i) + 7) % 7;
+    const wrap = document.createElement('div'); wrap.className = 'hbar-wrap';
+    const bar = document.createElement('div');
+    const maxScore = 480;
+    const hPct = score !== null ? Math.max(8, Math.round((score / maxScore) * 100)) : 6;
+    bar.className = 'hbar' + (score !== null ? ' filled' : '');
+    bar.style.height = hPct + '%';
+    const lbl = document.createElement('div'); lbl.className = 'hday'; lbl.textContent = days[dayIdx];
+    wrap.appendChild(bar); wrap.appendChild(lbl);
+    container.appendChild(wrap);
+  });
+}
+
+// ════════════════════════════════════════════
+// PATROL INTRO
+// ════════════════════════════════════════════
+function startPatrolIntro() {
+  const intro = PATROL_INTROS[Math.floor(Math.random() * PATROL_INTROS.length)];
+  document.getElementById('piCat').textContent = G.cat || '🐱';
+  document.getElementById('piClan').textContent = G.clan;
+  document.getElementById('piTitle').textContent = intro.title;
+  document.getElementById('piQuote').textContent = intro.quote;
+  showScreen('patrol-intro');
+}
+
+function beginPatrol() {
+  P.questions = generateQuestions();
+  P.current = 0;
+  P.score = 0;
+  P.correct = 0;
+  P.answer = '';
+  P.locked = false;
+  P.rankAtStart = G.rankIndex;
+  P.xpAtStart = G.xp;
+
+  showScreen('patrol');
+  loadQuestion();
+}
+
+// ════════════════════════════════════════════
+// QUESTION GENERATION
+// ════════════════════════════════════════════
+function generateQuestions() {
+  const qs = [];
+  OPS.forEach(op => {
+    for (let i = 0; i < 5; i++) qs.push(makeQuestion(op));
+  });
+  // Fisher-Yates shuffle
+  for (let i = qs.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [qs[i], qs[j]] = [qs[j], qs[i]];
+  }
+  return qs;
+}
+
+function makeQuestion(op) {
+  const missed = G.missWeights[op] || {};
+  const missKeys = Object.keys(missed);
+  let a, b;
+
+  if (missKeys.length > 0 && Math.random() < 0.4) {
+    const key = weightedPick(missed);
+    [a, b] = key.split('_').map(Number);
+    // Validate the pair makes sense for this op
+    if (op === 'sub' && b > a) [a, b] = [b, a];
+  } else {
+    [a, b] = randPair(op);
+  }
+  return buildQ(op, a, b);
+}
+
+function randPair(op) {
+  if (op === 'add') return [ri(0,12), ri(0,12)];
+  if (op === 'sub') { let a=ri(0,12), b=ri(0,12); if(b>a)[a,b]=[b,a]; return [a,b]; }
+  if (op === 'mul') return [ri(1,12), ri(1,12)];
+  if (op === 'div') { const b=ri(1,12); return [b*ri(1,12), b]; }
+  return [0,0];
+}
+
+function buildQ(op, a, b) {
+  let ans, display;
+  if (op==='add') { ans=a+b; display=`${a} + ${b}`; }
+  if (op==='sub') { ans=a-b; display=`${a} − ${b}`; }
+  if (op==='mul') { ans=a*b; display=`${a} × ${b}`; }
+  if (op==='div') { ans=a/b; display=`${a} ÷ ${b}`; }
+  return { op, a, b, ans, display };
+}
+
+function weightedPick(w) {
+  const keys = Object.keys(w);
+  const total = keys.reduce((s,k) => s + w[k], 0);
+  let r = Math.random() * total;
+  for (const k of keys) { r -= w[k]; if (r <= 0) return k; }
+  return keys[keys.length - 1];
+}
+
+function ri(min, max) { return Math.floor(Math.random()*(max-min+1))+min; }
+
+// ════════════════════════════════════════════
+// PATROL LOGIC
+// ════════════════════════════════════════════
+function loadQuestion() {
+  if (P.current >= P.questions.length) { finishPatrol(); return; }
+
+  const q = P.questions[P.current];
+  P.answer = '';
+  P.locked = false;
+
+  const idx = P.current + 1, tot = P.questions.length;
+  document.getElementById('patrolQCount').textContent = `Question ${idx} of ${tot}`;
+  document.getElementById('patrolProgFill').style.width = ((idx/tot)*100)+'%';
+  document.getElementById('patrolScoreDisplay').textContent = Math.max(0, P.score);
+  document.getElementById('patrolOpLabel').textContent = OP_LABELS[q.op];
+
+  const eq = document.getElementById('problemEq');
+  eq.classList.remove('fade-in','shake');
+  void eq.offsetWidth;
+  eq.textContent = q.display;
+  eq.classList.add('fade-in');
+
+  resetAnswerDisplay();
+  startTimer(q);
+}
+
+function resetAnswerDisplay() {
+  const ad = document.getElementById('answerDisplay');
+  ad.innerHTML = '<span class="answer-placeholder">_ _</span>';
+  ad.className = 'answer-display';
+}
+
+function startTimer(q) {
+  clearInterval(P.timerInterval);
+  P.timeLeft = 10;
+  updateTimerRing(10);
+
+  P.timerInterval = setInterval(() => {
+    P.timeLeft = Math.max(0, P.timeLeft - 0.1);
+    updateTimerRing(P.timeLeft);
+    document.getElementById('timerRing').classList.toggle('urgent', P.timeLeft <= 3);
+    if (P.timeLeft <= 0) {
+      clearInterval(P.timerInterval);
+      handleTimeout(q);
+    }
+  }, 100);
+}
+
+function updateTimerRing(t) {
+  const pct = t / 10;
+  document.getElementById('timerRing').style.strokeDashoffset = CIRC_TIMER * (1 - pct);
+  document.getElementById('timerNum').textContent = Math.ceil(t);
+}
+
+function handleTimeout(q) {
+  if (P.locked) return;
+  P.locked = true;
+  P.score -= 12;  // same penalty as wrong answer, floor only at patrol end
+  recordMiss(q);
+  showWrongFeedback(q.ans);
+  setTimeout(nextQ, 1000);
+}
+
+function nkPress(key) {
+  if (P.locked) return;
+  if (key === 'del') {
+    P.answer = P.answer.slice(0,-1);
+  } else if (key === 'go') {
+    if (P.answer.length > 0) submitAnswer();
+    return;
+  } else {
+    if (P.answer.length >= 3) return;
+    P.answer += key;
+  }
+  renderAnswerDisplay();
+}
+
+function renderAnswerDisplay() {
+  const ad = document.getElementById('answerDisplay');
+  if (!P.answer) {
+    ad.innerHTML = '<span class="answer-placeholder">_ _</span>';
+    ad.className = 'answer-display';
+  } else {
+    ad.textContent = P.answer;
+    ad.className = 'answer-display has-val';
+  }
+}
+
+function submitAnswer() {
+  if (P.locked) return;
+  const q = P.questions[P.current];
+  const given = parseInt(P.answer, 10);
+  clearInterval(P.timerInterval);
+  P.locked = true;
+
+  if (given === q.ans) {
+    const speedBonus = Math.max(0, Math.round(P.timeLeft * 1.4)); // 10s × 1.4 = 14pts max bonus
+    P.score += 10 + speedBonus;  // accumulate freely, floor only at patrol end
+    P.correct++;
+    recordHit(q);
+    showCorrectFeedback();
+    const sd = document.getElementById('patrolScoreDisplay');
+    sd.classList.remove('pop-score');
+    void sd.offsetWidth;
+    sd.classList.add('pop-score');
+    setTimeout(() => nextQ(), 550);
+  } else {
+    P.score -= 12;  // penalty -12, can go negative mid-patrol
+    recordMiss(q);
+    showWrongFeedback(q.ans);
+    setTimeout(() => nextQ(), 950);
+  }
+  document.getElementById('patrolScoreDisplay').textContent = Math.max(0, P.score);
+}
+
+function showCorrectFeedback() {
+  const ad = document.getElementById('answerDisplay');
+  ad.className = 'answer-display correct-ans';
+  spawnParticles();
+}
+
+function showWrongFeedback(correctAnswer) {
+  const ad = document.getElementById('answerDisplay');
+  ad.className = 'answer-display wrong-ans';
+  ad.textContent = correctAnswer;
+
+  const eq = document.getElementById('problemEq');
+  eq.classList.remove('shake');
+  void eq.offsetWidth;
+  eq.classList.add('shake');
+
+  const overlay = document.getElementById('wrongOverlay');
+  overlay.classList.add('flash');
+  setTimeout(() => overlay.classList.remove('flash'), 300);
+}
+
+function spawnParticles() {
+  const container = document.getElementById('particlesContainer');
+  const emojis = ['🐾','⭐','✨','🌟','💫'];
+  const cx = window.innerWidth / 2, cy = window.innerHeight * 0.45;
+
+  for (let i = 0; i < 6; i++) {
+    const p = document.createElement('div');
+    p.className = 'particle';
+    p.textContent = emojis[Math.floor(Math.random()*emojis.length)];
+    const angle = (Math.random() * 360) * Math.PI / 180;
+    const dist = 60 + Math.random() * 80;
+    p.style.left = cx + 'px';
+    p.style.top = cy + 'px';
+    p.style.setProperty('--dx', Math.cos(angle)*dist + 'px');
+    p.style.setProperty('--dy', Math.sin(angle)*dist + 'px');
+    p.style.animationDelay = (Math.random() * 0.15) + 's';
+    container.appendChild(p);
+    setTimeout(() => p.remove(), 900);
+  }
+}
+
+function nextQ() {
+  P.current++;
+  loadQuestion();
+}
+
+function recordHit(q) {
+  const key = `${q.a}_${q.b}`;
+  if (!G.masteryHits[q.op][key]) G.masteryHits[q.op][key] = 0;
+  const wasUnmastered = (G.masteryHits[q.op][key] || 0) < 3;
+  G.masteryHits[q.op][key]++;
+  if (wasUnmastered && G.masteryHits[q.op][key] >= 3) {
+    G.totalMastered++;
+    delete G.missWeights[q.op][key];
+  }
+}
+
+function recordMiss(q) {
+  const key = `${q.a}_${q.b}`;
+  G.missWeights[q.op][key] = (G.missWeights[q.op][key] || 0) + 1;
+}
+
+// ════════════════════════════════════════════
+// FINISH PATROL
+// ════════════════════════════════════════════
+function finishPatrol() {
+  clearInterval(P.timerInterval);
+
+  const total = P.questions.length;
+  const correct = P.correct;
+  const score = Math.max(0, P.score);
+  const accuracy = Math.round((correct / total) * 100);
+
+  // XP: correct answers × 8, speed bonus at 90%+ accuracy
+  let xpEarned = correct * 8;
+  if (accuracy >= 90) xpEarned = Math.round(xpEarned * 1.25);
+
+  // Streak
+  const today = todayStr();
+  if (G.lastPatrolDate !== today) {
+    const yest = new Date(); yest.setDate(yest.getDate()-1);
+    const yStr = yest.toISOString().slice(0,10);
+    G.streak = (G.lastPatrolDate === yStr) ? G.streak + 1 : 1;
+    G.lastPatrolDate = today;
+  }
+
+  G.totalPatrols++;
+  G.xp += xpEarned;
+  if (score > G.bestScore) G.bestScore = score;
+  if (accuracy > G.bestAccuracy) G.bestAccuracy = accuracy;
+  G.patrolHistory.push(score);
+  if (G.patrolHistory.length > 7) G.patrolHistory.shift();
+
+  // Rank up check
+  const oldRank = G.rankIndex;
+  while (G.rankIndex < RANKS.length-1 && G.xp >= RANKS[G.rankIndex+1].xp) {
+    G.rankIndex++;
+  }
+  const rankedUp = G.rankIndex > oldRank;
+  const reachedLeader = G.rankIndex === RANKS.length - 1 && oldRank < RANKS.length - 1;
+
+  save();
+
+  showResultsScreen({ correct, accuracy, score, xpEarned, rankedUp, reachedLeader, oldRank });
+}
+
+// ════════════════════════════════════════════
+// RESULTS SCREEN
+// ════════════════════════════════════════════
+function showResultsScreen({ correct, accuracy, score, xpEarned, rankedUp, reachedLeader, oldRank }) {
+  let icon, headline, subline;
+  if (accuracy === 100)      { icon='🌕'; headline='Perfect Patrol'; subline='Every answer. Full speed. The clan is proud.'; }
+  else if (accuracy >= 90)   { icon='⭐'; headline='Remarkable'; subline='You are becoming someone the forest remembers.'; }
+  else if (accuracy >= 75)   { icon='🌙'; headline='Strong Warrior'; subline='Sharp and steady. Keep this up.'; }
+  else if (accuracy >= 60)   { icon='🍃'; headline='Keep Training'; subline='Your paws grow steadier each patrol.'; }
+  else if (score === 0)      { icon='🌑'; headline='A Hard Lesson'; subline='Even the greatest warriors have hard days. Come back tomorrow.'; }
+  else                       { icon='🌿'; headline='Apprentice Work'; subline='Every warrior starts somewhere. The path continues.'; }
+
+  document.getElementById('resIcon').textContent = icon;
+  document.getElementById('resHeadline').textContent = headline;
+  document.getElementById('resSubline').textContent = subline;
+  document.getElementById('scoreVal').textContent = score;
+  document.getElementById('resCorrect').textContent = `${correct}/20`;
+  document.getElementById('resAccuracy').textContent = accuracy + '%';
+  document.getElementById('resXp').textContent = '+' + xpEarned;
+
+  // Animate ring
+  const ring = document.getElementById('scoreRingFill');
+  const clanColor = getComputedStyle(document.body).getPropertyValue('--clan-color').trim();
+  ring.style.stroke = clanColor;
+  ring.style.transition = 'none';
+  ring.style.strokeDashoffset = CIRC_SCORE;
+  setTimeout(() => {
+    ring.style.transition = 'stroke-dashoffset 1.1s cubic-bezier(0.4,0,0.2,1)';
+    ring.style.strokeDashoffset = CIRC_SCORE - (CIRC_SCORE * (accuracy / 100));
+  }, 80);
+
+  // XP Progress block
+  showXpProgress(xpEarned, rankedUp, oldRank);
+
+  // Breadcrumb
+  showBreadcrumb();
+
+  showScreen('results');
+  updateHomeUI();
+
+  // If ranked up, reveal a tap-to-continue button instead of auto-firing
+  const rankUpBtn = document.getElementById('resRankUpBtn');
+  const patrolBtn = document.getElementById('resPatrolBtn');
+  if (rankedUp) {
+    rankUpBtn.style.display = '';
+    patrolBtn.style.display = 'none';
+    // Store for triggerRankUp
+    window._pendingRankUp = { newRankIndex: oldRank + 1, reachedLeader };
+  } else {
+    rankUpBtn.style.display = 'none';
+    patrolBtn.style.display = '';
+    window._pendingRankUp = null;
+  }
+}
+
+function triggerRankUp() {
+  if (window._pendingRankUp) {
+    const { newRankIndex, reachedLeader } = window._pendingRankUp;
+    window._pendingRankUp = null;
+    handleRankUp(newRankIndex, reachedLeader);
+  }
+}
+
+function showXpProgress(xpEarned, rankedUp, oldRank) {
+  const rank = RANKS[G.rankIndex];
+  const nextRank = RANKS[G.rankIndex + 1];
+
+  // XP before this patrol
+  const xpBefore = G.xp - xpEarned;
+
+  // Rank being displayed is current rank (may have just changed)
+  const displayRank = rankedUp ? RANKS[oldRank] : rank;
+  const displayNext = RANKS[oldRank + 1] || rank;
+
+  const rankStart = displayRank.xp;
+  const rankEnd   = displayNext.xp;
+  const rankSpan  = Math.max(1, rankEnd - rankStart); // guard against 0 at Leader rank
+
+  // Where we were before patrol within this rank's segment
+  const xpBeforeInRank = Math.min(Math.max(0, xpBefore - rankStart), rankSpan);
+  const xpAfterInRank  = Math.min(Math.max(0, G.xp - rankStart), rankSpan);
+
+  const pctBefore = Math.round((xpBeforeInRank / rankSpan) * 100);
+  const pctAfter  = rankedUp ? 100 : Math.round((xpAfterInRank / rankSpan) * 100);
+
+  document.getElementById('resXpRank').textContent = displayRank.name;
+  document.getElementById('resXpNext').textContent = rankedUp
+    ? '🎉 Rank Up!'
+    : '→ ' + displayNext.name;
+
+  // Set before bar immediately, animate after bar
+  const beforeEl = document.getElementById('resXpBefore');
+  const afterEl  = document.getElementById('resXpAfter');
+
+  if (beforeEl) beforeEl.style.width = pctBefore + '%';
+  if (afterEl) {
+    afterEl.style.transition = 'none';
+    afterEl.style.width = pctBefore + '%';
+    setTimeout(() => {
+      afterEl.style.transition = 'width 1.2s cubic-bezier(0.4,0,0.2,1)';
+      afterEl.style.width = pctAfter + '%';
+    }, 200);
+  }
+
+  // Story chapter teaser for next rank
+  const arc = STORY['arc' + G.currentArc];
+  let teaser = '';
+  if (rankedUp && G.rankIndex < RANKS.length - 1) {
+    const nextStory = arc.ranks[G.rankIndex + 1];
+    if (nextStory && nextStory.unlockStory) {
+      teaser = 'Next: unlock "' + nextStory.unlockStory.title + '"';
+    }
+  } else if (!rankedUp && nextRank) {
+    const nextStory = arc.ranks[G.rankIndex + 1];
+    if (nextStory && nextStory.unlockStory) {
+      const xpLeft = nextRank.xp - G.xp;
+      teaser = xpLeft + ' XP to unlock "' + nextStory.unlockStory.title + '"';
+    } else {
+      const xpLeft = nextRank ? nextRank.xp - G.xp : 0;
+      teaser = xpLeft + ' XP to ' + (nextRank ? nextRank.name : 'Leader');
+    }
+  } else if (G.rankIndex === RANKS.length - 1) {
+    teaser = 'You have reached the highest rank.';
+  }
+
+  document.getElementById('resXpSub').textContent = teaser;
+}
+
+function showBreadcrumb() {
+  const arc = STORY['arc' + G.currentArc];
+  const crumbs = arc.breadcrumbs;
+  const unseen = crumbs.map((_, i) => i).filter(i => !G.breadcrumbsSeen.includes(i));
+
+  let idx;
+  if (unseen.length > 0) {
+    idx = unseen[Math.floor(Math.random() * unseen.length)];
+    G.breadcrumbsSeen.push(idx);
+    if (G.breadcrumbsSeen.length > crumbs.length) G.breadcrumbsSeen = G.breadcrumbsSeen.slice(-Math.floor(crumbs.length/2));
+    save();
+  } else {
+    G.breadcrumbsSeen = [];
+    idx = Math.floor(Math.random() * crumbs.length);
+    save();
+  }
+
+  document.getElementById('resBcText').textContent = sub(crumbs[idx]);
+}
+
+// ════════════════════════════════════════════
+// RANK UP & STORY UNLOCKING
+// ════════════════════════════════════════════
+function handleRankUp(newRankIndex, reachedLeader) {
+  const arc = STORY['arc' + G.currentArc];
+  const rankData = arc.ranks[newRankIndex];
+
+  // Determine which choice branch to use for this rank's story
+  // Based on the previous choice point
+  const prevCpId = getPrevChoicePoint(newRankIndex);
+  const choiceLetter = prevCpId ? (G.choices[prevCpId] || 'A') : 'A';
+
+  // Build story pages for this rank unlock
+  const unlockStory = rankData ? rankData.unlockStory : null;
+
+  const showStoryThenChoice = () => {
+    const cp = rankData ? rankData.choicePoint : null;
+    if (cp) {
+      showChoice(cp, () => {
+        if (reachedLeader) {
+          showLeaderStory();
+        } else {
+          showScreen('home');
+        }
+      });
+    } else if (reachedLeader) {
+      showLeaderStory();
+    } else {
+      showScreen('home');
+    }
+  };
+
+  if (unlockStory) {
+    // Resolve branch text
+    const pages = unlockStory.pages.map(p => {
+      if (typeof p === 'string') return sub(p, prevCpId);
+      // Object with variant key (legacy format)
+      return sub(p.text || p, prevCpId);
+    });
+
+    showCinematic({
+      eyebrow: RANKS[newRankIndex].name + ' — ' + arc.title,
+      title: unlockStory.title,
+      pages,
+      onComplete: showStoryThenChoice
+    });
+  } else if (rankData && rankData.choicePoint) {
+    showChoice(rankData.choicePoint, () => {
+      if (reachedLeader) showLeaderStory();
+      else showScreen('home');
+    });
+  } else if (reachedLeader) {
+    showLeaderStory();
+  } else {
+    // Just a rank-up with no story — show quick cinematic
+    showCinematic({
+      eyebrow: 'Rank Achieved',
+      title: 'You are now ' + RANKS[newRankIndex].name,
+      pages: [
+        `${G.warriorName} of ${G.clan}.\n\nThe clan watches you take your new place. You have earned this.`,
+        'Continue your patrols. The story is not finished.'
+      ],
+      onComplete: () => showScreen('home'),
+      showSkip: false
+    });
+  }
+}
+
+function getPrevChoicePoint(rankIndex) {
+  // Find the most recent choice point before this rank
+  const arc = STORY['arc' + G.currentArc];
+  let lastCp = null;
+  for (let i = 0; i < rankIndex; i++) {
+    if (arc.ranks[i] && arc.ranks[i].choicePoint) {
+      lastCp = arc.ranks[i].choicePoint.id;
+    }
+  }
+  return lastCp;
+}
+
+function showLeaderStory() {
+  // Show the leader rank story (last rank)
+  const arc = STORY['arc' + G.currentArc];
+  const leaderRank = arc.ranks[RANKS.length - 1];
+  const prevCpId = getPrevChoicePoint(RANKS.length - 1);
+
+  const pages = leaderRank.unlockStory.pages.map(p =>
+    typeof p === 'string' ? sub(p, prevCpId) : sub(p.text || p, prevCpId)
+  );
+
+  showCinematic({
+    eyebrow: 'Leader — ' + arc.title,
+    title: leaderRank.unlockStory.title,
+    pages,
+    onComplete: showArcComplete
+  });
+}
+
+function showArcComplete() {
+  const arc = STORY['arc' + G.currentArc];
+  G.arcsCompleted[G.currentArc] = (G.arcsCompleted[G.currentArc] || 0) + 1;
+
+  // Unlock next arc if available
+  if (G.currentArc < 2) {
+    G.arcsUnlocked[G.currentArc + 1] = true;
+  }
+  save();
+
+  document.getElementById('acTitle').textContent = arc.title + ' — Complete!';
+  document.getElementById('acSub').textContent =
+    `You have reached Leader and finished ${arc.subtitle}.\n` +
+    (G.currentArc < 2 ? 'A new arc has been unlocked.' : 'You have completed all three arcs. Legend.');
+
+  showScreen('arc-complete');
+}
+
+function replayCurrentArc() {
+  selectArc(G.currentArc);
+}
+
+// ════════════════════════════════════════════
+// UTILITY
+// ════════════════════════════════════════════
+function todayStr() {
+  const d = new Date();
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+
+// ════════════════════════════════════════════
+// INIT
+// ════════════════════════════════════════════
+function init() {
+  load();
+
+  if (G.onboarded && G.clan) {
+    applyProfile();
+    updateHomeUI();
+
+    // Show intro cinematic if not seen yet for this playthrough
+    if (!G.seenIntro) {
+      const arc = STORY['arc' + G.currentArc];
+      showCinematic({
+        eyebrow: arc.subtitle + ' — ' + arc.title,
+        title: 'Your Story Begins',
+        pages: arc.intro.pages.map(p => sub(p)),
+        onComplete: () => { G.seenIntro = true; save(); showScreen('home'); }
+      });
+    } else {
+      showScreen('home');
+    }
+  } else {
+    showScreen('onboard');
+  }
+}
+
+init();
+</script>
+</body>
+</html>
