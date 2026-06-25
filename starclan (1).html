@@ -1,0 +1,1499 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>StarClan's Watch</title>
+<style>
+:root {
+  --night: #0d1117;
+  --deep: #161c26;
+  --den: #1e2736;
+  --bark: #2c3a4f;
+  --mist: #3d5068;
+  --moon: #c9d6e8;
+  --star: #e8d48a;
+  --ember: #e8914a;
+  --herb: #6ab87a;
+  --blood: #c05050;
+  --pale: #8aa0b8;
+  --forest-ink: #d4e8d0;
+  --panel-bg: rgba(13,17,23,0.96);
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bot: env(safe-area-inset-bottom, 0px);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+html,body{width:100%;height:100%;overflow:hidden;background:var(--night);font-family:'Georgia',serif;color:var(--moon);}
+canvas{display:block;touch-action:none;}
+
+/* HUD */
+#hud{position:fixed;top:calc(var(--safe-top) + 8px);left:0;right:0;display:flex;gap:6px;padding:0 12px;z-index:50;pointer-events:none;}
+.stat-bar{flex:1;background:rgba(13,17,23,0.85);border:1px solid rgba(201,214,232,0.15);border-radius:8px;padding:5px 8px;}
+.stat-label{font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:var(--pale);font-family:monospace;}
+.stat-track{height:5px;border-radius:3px;background:rgba(255,255,255,0.1);margin-top:3px;overflow:hidden;}
+.stat-fill{height:100%;border-radius:3px;transition:width .4s ease;}
+.fill-prey{background:linear-gradient(90deg,#c8832a,#e8c050);}
+.fill-herb{background:linear-gradient(90deg,#3a8a50,#6ab87a);}
+.fill-territory{background:linear-gradient(90deg,#4060a0,#6888d0);}
+.fill-morale{background:linear-gradient(90deg,#8040a0,#c080e0);}
+.stat-val{font-size:10px;color:var(--star);font-family:monospace;margin-top:1px;}
+
+#moon-info{position:fixed;top:calc(var(--safe-top) + 72px);right:12px;z-index:50;text-align:right;pointer-events:none;}
+#moon-info .moon-num{font-size:11px;color:var(--star);font-family:monospace;letter-spacing:.06em;}
+#moon-info .season-name{font-size:10px;color:var(--pale);font-family:monospace;}
+
+#xp-bar-wrap{position:fixed;bottom:calc(var(--safe-bot) + 60px);left:12px;right:12px;z-index:50;pointer-events:none;}
+#xp-label{font-size:10px;color:var(--star);font-family:monospace;margin-bottom:3px;}
+#xp-track{height:3px;background:rgba(255,255,255,0.1);border-radius:2px;}
+#xp-fill{height:100%;border-radius:2px;background:linear-gradient(90deg,var(--star),var(--ember));transition:width .5s ease;}
+
+/* Bottom bar */
+#bottom-bar{position:fixed;bottom:0;left:0;right:0;height:calc(52px + var(--safe-bot));background:rgba(13,17,23,0.92);border-top:1px solid rgba(201,214,232,0.12);display:flex;align-items:center;padding:0 8px;padding-bottom:var(--safe-bot);z-index:50;gap:6px;}
+.btn{border:none;border-radius:10px;font-family:'Georgia',serif;cursor:pointer;transition:all .15s;min-height:44px;min-width:44px;display:flex;align-items:center;justify-content:center;gap:5px;}
+.btn-icon{background:rgba(255,255,255,0.06);color:var(--moon);font-size:18px;flex-shrink:0;}
+.btn-primary{background:linear-gradient(135deg,var(--ember),#c06830);color:#fff;font-size:13px;font-weight:bold;letter-spacing:.03em;flex:1;padding:0 12px;}
+.btn-secondary{background:rgba(255,255,255,0.08);color:var(--moon);font-size:12px;padding:0 12px;flex:1;}
+.btn:active{transform:scale(0.96);opacity:.85;}
+
+/* Panels */
+.panel{position:fixed;bottom:0;left:0;right:0;background:var(--panel-bg);border-top:1px solid rgba(201,214,232,0.15);border-radius:20px 20px 0 0;z-index:100;transform:translateY(100%);transition:transform .32s cubic-bezier(.25,.8,.25,1);max-height:88vh;overflow-y:auto;padding-bottom:var(--safe-bot);}
+.panel.open{transform:translateY(0);}
+.panel-handle{width:40px;height:4px;background:rgba(255,255,255,0.2);border-radius:2px;margin:10px auto 0;}
+.panel-title{font-size:18px;color:var(--star);padding:12px 20px 4px;letter-spacing:.02em;}
+.panel-sub{font-size:12px;color:var(--pale);font-family:monospace;padding:0 20px 12px;border-bottom:1px solid rgba(255,255,255,0.08);}
+
+/* Zone panel */
+.zone-header{padding:16px 20px 12px;}
+.zone-type-badge{font-size:10px;font-family:monospace;letter-spacing:.12em;text-transform:uppercase;color:var(--pale);margin-bottom:4px;}
+.zone-name-big{font-size:22px;color:var(--star);margin-bottom:4px;}
+.zone-desc{font-size:13px;color:var(--moon);line-height:1.55;margin-bottom:12px;}
+.zone-stats{display:flex;gap:12px;font-size:11px;font-family:monospace;color:var(--pale);}
+.zone-stat span{color:var(--moon);}
+
+.section-head{font-size:10px;font-family:monospace;letter-spacing:.1em;text-transform:uppercase;color:var(--pale);padding:12px 20px 6px;border-top:1px solid rgba(255,255,255,0.06);}
+
+/* Cat assignment */
+.cat-row{display:flex;align-items:center;gap:10px;padding:10px 20px;border-bottom:1px solid rgba(255,255,255,0.05);}
+.cat-portrait{width:40px;height:40px;border-radius:50%;border:2px solid rgba(255,255,255,0.15);font-size:18px;display:flex;align-items:center;justify-content:center;background:var(--den);flex-shrink:0;}
+.cat-portrait.selected{border-color:var(--star);}
+.cat-info{flex:1;}
+.cat-name{font-size:14px;color:var(--moon);}
+.cat-role{font-size:11px;color:var(--pale);font-family:monospace;}
+.cat-traits{font-size:10px;color:var(--herb);font-family:monospace;margin-top:1px;}
+.cat-check{font-size:20px;color:var(--star);width:28px;text-align:center;}
+
+/* Math overlay */
+#math-overlay{position:fixed;inset:0;background:rgba(10,14,20,0.88);z-index:200;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding-top:calc(var(--safe-top) + 20px);}
+#math-overlay.hidden{display:none;}
+.math-zone-info{font-size:11px;font-family:monospace;color:var(--pale);letter-spacing:.08em;text-transform:uppercase;margin-bottom:8px;}
+.math-progress{display:flex;gap:8px;margin-bottom:20px;}
+.math-dot{width:12px;height:12px;border-radius:50%;background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.25);}
+.math-dot.correct{background:var(--herb);border-color:var(--herb);}
+.math-dot.wrong{background:var(--blood);border-color:var(--blood);}
+.math-dot.current{border-color:var(--star);}
+.math-problem{font-size:48px;color:var(--star);text-align:center;margin-bottom:8px;min-height:64px;letter-spacing:.02em;}
+.math-timer-track{width:220px;height:4px;background:rgba(255,255,255,0.1);border-radius:2px;margin-bottom:24px;}
+#math-timer-bar{height:100%;border-radius:2px;background:var(--herb);transition:width .1s linear;}
+.math-display{font-size:36px;color:var(--moon);text-align:center;min-height:50px;margin-bottom:8px;letter-spacing:.04em;font-family:monospace;}
+.math-hint{font-size:12px;color:var(--pale);font-family:monospace;min-height:18px;text-align:center;margin-bottom:12px;}
+.numpad{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;width:260px;}
+.num-btn{background:var(--den);border:1px solid rgba(255,255,255,0.12);border-radius:14px;color:var(--moon);font-size:24px;height:64px;cursor:pointer;font-family:'Georgia',serif;transition:all .1s;}
+.num-btn:active{background:var(--bark);transform:scale(0.94);}
+.num-btn.zero{grid-column:1/3;}
+.num-btn.del{background:rgba(180,80,80,0.2);color:var(--blood);}
+#submit-btn{width:260px;margin-top:10px;height:54px;background:linear-gradient(135deg,var(--ember),#c06830);border:none;border-radius:14px;color:#fff;font-size:17px;font-family:'Georgia',serif;cursor:pointer;letter-spacing:.04em;}
+
+/* Event screen */
+#event-screen{position:fixed;inset:0;background:linear-gradient(180deg,var(--night) 0%,var(--deep) 100%);z-index:300;display:flex;flex-direction:column;padding:calc(var(--safe-top) + 20px) 24px calc(var(--safe-bot) + 20px);overflow-y:auto;}
+#event-screen.hidden{display:none;}
+.event-icon{font-size:52px;text-align:center;margin-bottom:12px;}
+.event-type-label{font-size:10px;font-family:monospace;letter-spacing:.15em;text-transform:uppercase;color:var(--pale);text-align:center;margin-bottom:8px;}
+.event-title{font-size:24px;color:var(--star);text-align:center;margin-bottom:16px;line-height:1.25;}
+.event-text{font-size:15px;color:var(--moon);line-height:1.65;margin-bottom:24px;}
+.event-choices{display:flex;flex-direction:column;gap:10px;}
+.choice-btn{background:var(--den);border:1px solid rgba(201,214,232,0.15);border-radius:14px;padding:14px 16px;text-align:left;color:var(--moon);font-size:14px;font-family:'Georgia',serif;cursor:pointer;line-height:1.45;transition:all .15s;}
+.choice-btn:active{background:var(--bark);}
+.choice-btn .choice-label{color:var(--star);font-size:15px;display:block;margin-bottom:4px;}
+.choice-btn .choice-effect{font-size:12px;color:var(--pale);font-style:italic;}
+.continue-btn{background:linear-gradient(135deg,var(--mist),var(--bark));border:none;border-radius:14px;padding:16px;color:var(--star);font-size:16px;font-family:'Georgia',serif;cursor:pointer;width:100%;margin-top:8px;letter-spacing:.03em;}
+
+/* Cinematic / rank up */
+#cinematic{position:fixed;inset:0;background:var(--night);z-index:400;display:flex;flex-direction:column;align-items:center;padding:calc(var(--safe-top) + 30px) 24px calc(var(--safe-bot) + 30px);overflow-y:auto;}
+#cinematic.hidden{display:none;}
+.cin-stars{font-size:28px;letter-spacing:6px;margin-bottom:20px;opacity:.8;}
+.cin-label{font-size:10px;font-family:monospace;letter-spacing:.2em;text-transform:uppercase;color:var(--star);margin-bottom:8px;}
+.cin-rank{font-size:28px;color:var(--moon);margin-bottom:4px;text-align:center;}
+.cin-title{font-size:18px;color:var(--pale);margin-bottom:24px;text-align:center;font-style:italic;}
+.cin-divider{width:60px;height:1px;background:linear-gradient(90deg,transparent,var(--star),transparent);margin:0 auto 24px;}
+.cin-text{font-size:15px;color:var(--moon);line-height:1.75;text-align:left;max-width:500px;margin-bottom:24px;}
+.cin-starclan{background:rgba(201,214,232,0.05);border:1px solid rgba(201,214,232,0.15);border-radius:12px;padding:14px 18px;max-width:500px;width:100%;margin-bottom:28px;}
+.cin-starclan-label{font-size:10px;font-family:monospace;letter-spacing:.12em;text-transform:uppercase;color:var(--star);margin-bottom:6px;}
+.cin-starclan-text{font-size:14px;color:var(--pale);font-style:italic;line-height:1.55;}
+.cin-continue{background:linear-gradient(135deg,var(--ember),#c06830);border:none;border-radius:14px;padding:16px 40px;color:#fff;font-size:16px;font-family:'Georgia',serif;cursor:pointer;letter-spacing:.04em;}
+
+/* Cat maker */
+#cat-maker{position:fixed;inset:0;background:linear-gradient(180deg,#050810 0%,var(--night) 40%,var(--deep) 100%);z-index:500;display:flex;flex-direction:column;align-items:center;padding:calc(var(--safe-top) + 20px) 24px calc(var(--safe-bot) + 20px);overflow-y:auto;}
+#cat-maker.hidden{display:none;}
+.maker-title{font-size:26px;color:var(--star);text-align:center;margin-bottom:4px;}
+.maker-sub{font-size:13px;color:var(--pale);text-align:center;font-family:monospace;margin-bottom:24px;}
+.maker-canvas-wrap{width:120px;height:120px;margin:0 auto 20px;border-radius:50%;border:3px solid rgba(232,212,138,.4);overflow:hidden;background:var(--den);}
+#maker-canvas{width:120px;height:120px;}
+.maker-field{width:100%;margin-bottom:14px;}
+.maker-label{font-size:11px;font-family:monospace;letter-spacing:.1em;text-transform:uppercase;color:var(--pale);margin-bottom:6px;}
+.maker-input{width:100%;background:var(--den);border:1px solid rgba(255,255,255,0.15);border-radius:10px;padding:12px 14px;color:var(--moon);font-size:16px;font-family:'Georgia',serif;outline:none;}
+.maker-input:focus{border-color:var(--star);}
+.maker-options{display:flex;flex-wrap:wrap;gap:8px;}
+.maker-opt{background:var(--den);border:1px solid rgba(255,255,255,0.12);border-radius:8px;padding:7px 12px;color:var(--pale);font-size:13px;cursor:pointer;font-family:'Georgia',serif;transition:all .15s;}
+.maker-opt.sel{background:rgba(232,212,138,.15);border-color:var(--star);color:var(--star);}
+.clan-opt{border-radius:10px;padding:12px 16px;font-size:14px;}
+.maker-start{width:100%;margin-top:8px;height:54px;background:linear-gradient(135deg,var(--ember),#c06830);border:none;border-radius:14px;color:#fff;font-size:18px;font-family:'Georgia',serif;cursor:pointer;letter-spacing:.04em;}
+.maker-dream{font-size:13px;color:var(--pale);text-align:center;line-height:1.6;margin-bottom:20px;font-style:italic;}
+
+/* Resolution screen */
+#resolution{position:fixed;inset:0;background:var(--deep);z-index:350;display:flex;flex-direction:column;padding:calc(var(--safe-top) + 20px) 24px calc(var(--safe-bot) + 20px);overflow-y:auto;}
+#resolution.hidden{display:none;}
+.res-moon-num{font-size:12px;font-family:monospace;letter-spacing:.12em;text-transform:uppercase;color:var(--star);margin-bottom:4px;}
+.res-title{font-size:26px;color:var(--moon);margin-bottom:20px;}
+.res-stat-change{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.06);}
+.res-stat-icon{font-size:20px;width:32px;text-align:center;}
+.res-stat-name{font-size:13px;color:var(--pale);font-family:monospace;flex:1;}
+.res-stat-delta{font-size:16px;font-family:monospace;font-weight:bold;}
+.delta-pos{color:var(--herb);}
+.delta-neg{color:var(--blood);}
+.delta-zero{color:var(--pale);}
+.res-score{background:rgba(232,212,138,.08);border:1px solid rgba(232,212,138,.2);border-radius:12px;padding:16px;margin:20px 0;text-align:center;}
+.res-score-num{font-size:36px;color:var(--star);font-family:monospace;}
+.res-score-label{font-size:11px;font-family:monospace;letter-spacing:.1em;text-transform:uppercase;color:var(--pale);margin-top:4px;}
+.res-narrative{font-size:14px;color:var(--moon);line-height:1.6;margin-bottom:20px;font-style:italic;}
+.breadcrumb-box{background:rgba(201,214,232,.04);border-left:2px solid var(--star);padding:10px 14px;margin-bottom:20px;font-size:13px;color:var(--pale);font-style:italic;line-height:1.5;}
+
+/* Camp panel */
+.structure-row{display:flex;align-items:center;gap:12px;padding:12px 20px;border-bottom:1px solid rgba(255,255,255,0.05);}
+.structure-icon{font-size:24px;width:36px;text-align:center;}
+.structure-info{flex:1;}
+.structure-name{font-size:14px;color:var(--moon);}
+.structure-level{font-size:11px;font-family:monospace;color:var(--pale);}
+.upgrade-btn{background:var(--den);border:1px solid rgba(232,212,138,.3);border-radius:8px;padding:6px 12px;color:var(--star);font-size:12px;font-family:monospace;cursor:pointer;}
+.upgrade-btn:disabled{opacity:.4;cursor:default;}
+
+/* Shimmer animation for campfire */
+@keyframes flicker{0%,100%{opacity:.9;transform:scale(1);}50%{opacity:.7;transform:scale(.95);}}
+
+/* Shake animation */
+@keyframes shake{0%,100%{transform:translateX(0);}20%{transform:translateX(-8px);}40%{transform:translateX(8px);}60%{transform:translateX(-6px);}80%{transform:translateX(6px);}}
+.shake{animation:shake .35s ease;}
+
+/* Floating number */
+.float-num{position:fixed;font-size:18px;font-family:monospace;font-weight:bold;pointer-events:none;z-index:600;animation:floatUp .8s ease forwards;}
+@keyframes floatUp{0%{opacity:1;transform:translateY(0);}100%{opacity:0;transform:translateY(-50px);}}
+
+/* Tutorial tooltip */
+#tutorial-tip{position:fixed;bottom:calc(var(--safe-bot) + 70px);left:50%;transform:translateX(-50%);background:rgba(30,39,54,.95);border:1px solid rgba(232,212,138,.3);border-radius:12px;padding:10px 16px;font-size:13px;color:var(--moon);text-align:center;z-index:60;pointer-events:none;max-width:280px;transition:opacity .3s;}
+#tutorial-tip.hidden{opacity:0;}
+
+/* Overlay dimmer for panels */
+#dimmer{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:90;opacity:0;pointer-events:none;transition:opacity .3s;}
+#dimmer.on{opacity:1;pointer-events:all;}
+</style>
+</head>
+<body>
+
+<!-- HUD Stats -->
+<div id="hud">
+  <div class="stat-bar">
+    <div class="stat-label">🍖 Prey</div>
+    <div class="stat-track"><div class="stat-fill fill-prey" id="fill-prey" style="width:70%"></div></div>
+    <div class="stat-val" id="val-prey">70</div>
+  </div>
+  <div class="stat-bar">
+    <div class="stat-label">🌿 Herbs</div>
+    <div class="stat-track"><div class="stat-fill fill-herb" id="fill-herb" style="width:60%"></div></div>
+    <div class="stat-val" id="val-herb">60</div>
+  </div>
+  <div class="stat-bar">
+    <div class="stat-label">⚑ Territory</div>
+    <div class="stat-track"><div class="stat-fill fill-territory" id="fill-territory" style="width:50%"></div></div>
+    <div class="stat-val" id="val-territory">50</div>
+  </div>
+  <div class="stat-bar">
+    <div class="stat-label">♥ Morale</div>
+    <div class="stat-track"><div class="stat-fill fill-morale" id="fill-morale" style="width:80%"></div></div>
+    <div class="stat-val" id="val-morale">80</div>
+  </div>
+</div>
+
+<div id="moon-info">
+  <div class="moon-num" id="moon-display">Moon 1</div>
+  <div class="season-name" id="season-display">Greenleaf</div>
+</div>
+
+<!-- Main canvas -->
+<canvas id="game-canvas"></canvas>
+
+<!-- XP bar -->
+<div id="xp-bar-wrap">
+  <div id="xp-label">Spark Kit · 0 / 150 xp</div>
+  <div id="xp-track"><div id="xp-fill" style="width:0%"></div></div>
+</div>
+
+<!-- Bottom bar -->
+<div id="bottom-bar">
+  <button class="btn btn-icon" id="btn-camp" title="Camp">🏕️</button>
+  <button class="btn btn-primary hidden" id="btn-send">Send Patrol →</button>
+  <button class="btn btn-secondary" id="btn-end-moon">End Moon 🌙</button>
+</div>
+
+<!-- Overlay dimmer -->
+<div id="dimmer"></div>
+
+<!-- Tutorial tip -->
+<div id="tutorial-tip">Tap a zone to send a patrol!</div>
+
+<!-- Zone Panel -->
+<div class="panel" id="zone-panel">
+  <div class="panel-handle"></div>
+  <div class="zone-header">
+    <div class="zone-type-badge" id="zp-type"></div>
+    <div class="zone-name-big" id="zp-name"></div>
+    <div class="zone-desc" id="zp-desc"></div>
+    <div class="zone-stats">
+      <div>Richness <span id="zp-rich"></span></div>
+      <div>Danger <span id="zp-danger"></span></div>
+    </div>
+  </div>
+  <div class="section-head">Choose Cats for Patrol</div>
+  <div id="cat-list"></div>
+  <div style="padding:16px 20px;">
+    <button class="btn btn-primary" id="btn-launch" style="width:100%;height:50px;font-size:15px;">Send Patrol →</button>
+  </div>
+</div>
+
+<!-- Camp Panel -->
+<div class="panel" id="camp-panel">
+  <div class="panel-handle"></div>
+  <div class="panel-title">🏕️ Camp</div>
+  <div class="panel-sub" id="camp-sub">Your clan's home</div>
+  <div class="section-head">Warriors</div>
+  <div id="camp-cat-list"></div>
+  <div class="section-head">Structures</div>
+  <div id="structure-list"></div>
+  <div style="padding:16px 20px;">
+    <button class="btn btn-primary" id="btn-end-moon-camp" style="width:100%;height:50px;font-size:15px;">End Moon 🌙</button>
+  </div>
+</div>
+
+<!-- Math Overlay -->
+<div id="math-overlay" class="hidden">
+  <div class="math-zone-info" id="math-zone-label"></div>
+  <div class="math-progress" id="math-progress"></div>
+  <div class="math-problem" id="math-problem">3 × 4</div>
+  <div class="math-timer-track"><div id="math-timer-bar" style="width:100%"></div></div>
+  <div class="math-display" id="math-display">_</div>
+  <div class="math-hint" id="math-hint"></div>
+  <div class="numpad">
+    <button class="num-btn" data-n="7">7</button>
+    <button class="num-btn" data-n="8">8</button>
+    <button class="num-btn" data-n="9">9</button>
+    <button class="num-btn" data-n="4">4</button>
+    <button class="num-btn" data-n="5">5</button>
+    <button class="num-btn" data-n="6">6</button>
+    <button class="num-btn" data-n="1">1</button>
+    <button class="num-btn" data-n="2">2</button>
+    <button class="num-btn" data-n="3">3</button>
+    <button class="num-btn zero" data-n="0">0</button>
+    <button class="num-btn del" data-n="del">⌫</button>
+  </div>
+  <button id="submit-btn">Check ✓</button>
+</div>
+
+<!-- Event Screen -->
+<div id="event-screen" class="hidden">
+  <div class="event-icon" id="ev-icon"></div>
+  <div class="event-type-label" id="ev-type"></div>
+  <div class="event-title" id="ev-title"></div>
+  <div class="event-text" id="ev-text"></div>
+  <div class="event-choices" id="ev-choices"></div>
+</div>
+
+<!-- Resolution Screen -->
+<div id="resolution" class="hidden">
+  <div class="res-moon-num" id="res-moon"></div>
+  <div class="res-title">Moon Ends</div>
+  <div id="res-changes"></div>
+  <div class="res-score">
+    <div class="res-score-num" id="res-score-num">0</div>
+    <div class="res-score-label">Moon Score</div>
+  </div>
+  <div class="res-narrative" id="res-narrative"></div>
+  <div class="breadcrumb-box" id="breadcrumb-box"></div>
+  <button class="continue-btn" id="res-continue">Continue →</button>
+</div>
+
+<!-- Cinematic -->
+<div id="cinematic" class="hidden">
+  <div class="cin-stars">✦ ✦ ✦ ✦ ✦</div>
+  <div class="cin-label">StarClan speaks</div>
+  <div class="cin-rank" id="cin-rank"></div>
+  <div class="cin-title" id="cin-title-text"></div>
+  <div class="cin-divider"></div>
+  <div class="cin-text" id="cin-text"></div>
+  <div class="cin-starclan">
+    <div class="cin-starclan-label">🌙 StarClan's Message</div>
+    <div class="cin-starclan-text" id="cin-msg"></div>
+  </div>
+  <button class="cin-continue" id="cin-continue">Return to Camp →</button>
+</div>
+
+<!-- Cat Maker -->
+<div id="cat-maker">
+  <div class="maker-title">✦ StarClan's Watch ✦</div>
+  <div class="maker-sub">Create your warrior</div>
+  <div class="maker-canvas-wrap"><canvas id="maker-canvas" width="120" height="120"></canvas></div>
+
+  <div class="maker-field">
+    <div class="maker-label">Your warrior's name</div>
+    <input class="maker-input" id="maker-name" type="text" maxlength="20" placeholder="e.g. Firekit" autocomplete="off">
+  </div>
+
+  <div class="maker-field">
+    <div class="maker-label">Clan</div>
+    <div class="maker-options" id="clan-opts">
+      <button class="maker-opt clan-opt" data-val="ThunderClan">⚡ ThunderClan</button>
+      <button class="maker-opt clan-opt" data-val="RiverClan">💧 RiverClan</button>
+      <button class="maker-opt clan-opt" data-val="WindClan">🌬️ WindClan</button>
+      <button class="maker-opt clan-opt" data-val="ShadowClan">🌑 ShadowClan</button>
+    </div>
+  </div>
+
+  <div class="maker-field">
+    <div class="maker-label">Coat color</div>
+    <div class="maker-options" id="coat-opts">
+      <button class="maker-opt" data-val="orange">Orange</button>
+      <button class="maker-opt" data-val="gray">Gray</button>
+      <button class="maker-opt" data-val="black">Black</button>
+      <button class="maker-opt" data-val="white">White</button>
+      <button class="maker-opt" data-val="brown">Brown</button>
+      <button class="maker-opt" data-val="calico">Calico</button>
+    </div>
+  </div>
+
+  <div class="maker-field">
+    <div class="maker-label">Markings</div>
+    <div class="maker-options" id="marking-opts">
+      <button class="maker-opt" data-val="none">Plain</button>
+      <button class="maker-opt" data-val="tabby">Tabby</button>
+      <button class="maker-opt" data-val="tipped">Tipped</button>
+      <button class="maker-opt" data-val="spotted">Spotted</button>
+    </div>
+  </div>
+
+  <div class="maker-field">
+    <div class="maker-label">Eye color</div>
+    <div class="maker-options" id="eye-opts">
+      <button class="maker-opt" data-val="amber">Amber</button>
+      <button class="maker-opt" data-val="blue">Blue</button>
+      <button class="maker-opt" data-val="green">Green</button>
+      <button class="maker-opt" data-val="gold">Gold</button>
+    </div>
+  </div>
+
+  <div class="maker-field">
+    <div class="maker-label">Personality</div>
+    <div class="maker-options" id="personality-opts">
+      <button class="maker-opt" data-val="Brave">Brave</button>
+      <button class="maker-opt" data-val="Cautious">Cautious</button>
+      <button class="maker-opt" data-val="Clever">Clever</button>
+      <button class="maker-opt" data-val="Loyal">Loyal</button>
+      <button class="maker-opt" data-val="Fierce">Fierce</button>
+    </div>
+  </div>
+
+  <div class="maker-dream" id="maker-prophecy-text">Choose your clan to receive a prophecy from StarClan…</div>
+  <button class="maker-start" id="maker-start-btn">Begin the Journey ✦</button>
+</div>
+
+<script type="module">
+import { ZONES, EVENTS, STORY_ARCS, CAT_NAMES, PROPHECIES, SEASON_FLAVOR, UPGRADE_TEXT, RIVAL_TAUNTS } from './starclan-content.js';
+
+// ── STATE ──────────────────────────────────────────────────────────────────
+const S = {
+  player: { name:'Firekit', clan:'ThunderClan', coat:'orange', marking:'tabby', eyes:'amber', personality:'Brave', specialty:'Hunt' },
+  resources: { prey:70, herbs:60, territory:50, morale:80 },
+  moon: 1,
+  season: 'Greenleaf',
+  seasonMoon: 0,
+  year: 1,
+  xp: 0,
+  arcIndex: 0,
+  rankIndex: 0,
+  totalScore: 0,
+  moonScore: 0,
+  cats: [],
+  structures: { fresh_kill_pile:1, medicine_den:1, training_grounds:1, watchtower:0, nursery:0, leaders_rock:0 },
+  unlockedZones: [],
+  exploredZones: [],
+  pendingEvent: null,
+  activeExpedition: null,
+  mathSession: null,
+  seenEventIds: [],
+  breadcrumbIndex: 0,
+  initialized: false
+};
+
+const SEASONS = ['Greenleaf','Leaf-fall','Leaf-bare','Newleaf'];
+const SEASON_MODIFIERS = {
+  Greenleaf:  { prey:1.2, illness:0.6, kitBirth:0.05 },
+  'Leaf-fall':{ prey:0.9, illness:1.0, kitBirth:0.02 },
+  'Leaf-bare':{ prey:0.6, illness:1.4, kitBirth:0.0  },
+  Newleaf:    { prey:1.1, illness:0.8, kitBirth:0.10 }
+};
+const STRUCTURE_META = {
+  fresh_kill_pile:{ icon:'🍖', name:'Fresh-Kill Pile',    maxLevel:3, cost:(l)=>({prey:20*l,herbs:0}) },
+  medicine_den:   { icon:'🌿', name:'Medicine Den',       maxLevel:3, cost:(l)=>({prey:0,herbs:15*l}) },
+  training_grounds:{ icon:'🥋', name:'Training Grounds',  maxLevel:3, cost:(l)=>({prey:15*l,herbs:10*l}) },
+  watchtower:     { icon:'👁️', name:'Watchtower',         maxLevel:3, cost:(l)=>({prey:20*l,herbs:0}) },
+  nursery:        { icon:'🐱', name:'Nursery',            maxLevel:3, cost:(l)=>({prey:0,herbs:20*l}) },
+  leaders_rock:   { icon:'⭐', name:"Leader's Rock",      maxLevel:3, cost:(l)=>({prey:25*l,herbs:25*l}) }
+};
+
+// ── MATH ENGINE ────────────────────────────────────────────────────────────
+const masteryMap = {};  // "3x4" -> {score:0, correct:0, attempts:0}
+
+function getMasteryKey(a,op,b){ return `${a}${op}${b}`; }
+function getMastery(k){ return masteryMap[k] || { score:0 }; }
+function updateMastery(k,correct){
+  if(!masteryMap[k]) masteryMap[k]={score:0,correct:0,attempts:0};
+  masteryMap[k].attempts++;
+  if(correct){ masteryMap[k].correct++; masteryMap[k].score=Math.min(3,masteryMap[k].score+1); }
+  else { masteryMap[k].score=Math.max(0,masteryMap[k].score-1); }
+}
+
+function generateProblem(){
+  const r=Math.random();
+  if(r<0.45){
+    // multiplication
+    const a=2+Math.floor(Math.random()*11), b=2+Math.floor(Math.random()*11);
+    const k=getMasteryKey(a,'×',b);
+    return { display:`${a} × ${b}`, answer:a*b, key:k, type:'×' };
+  } else if(r<0.75){
+    // division
+    const a=2+Math.floor(Math.random()*10), b=2+Math.floor(Math.random()*10);
+    const product=a*b;
+    const k=getMasteryKey(product,'÷',a);
+    return { display:`${product} ÷ ${a}`, answer:b, key:k, type:'÷' };
+  } else if(r<0.88){
+    // two-digit addition
+    const a=10+Math.floor(Math.random()*80), b=10+Math.floor(Math.random()*80);
+    const sum=a+b;
+    if(sum>199) return generateProblem();
+    return { display:`${a} + ${b}`, answer:sum, key:`${a}+${b}`, type:'+' };
+  } else {
+    // subtraction
+    const a=20+Math.floor(Math.random()*70), b=10+Math.floor(Math.random()*Math.min(a-10,60));
+    return { display:`${a} − ${b}`, answer:a-b, key:`${a}-${b}`, type:'-' };
+  }
+}
+
+// ── CAT GENERATION ─────────────────────────────────────────────────────────
+const PERSONALITIES = ['Brave','Cautious','Clever','Loyal','Fierce'];
+const SPECIALTIES   = ['Hunt','Herb','Fight','Scout','Heal'];
+const ROLES         = ['warrior','warrior','warrior','apprentice','medicine'];
+const COAT_COLORS   = ['orange','gray','black','white','brown'];
+const MARKINGS      = ['none','tabby','tipped','spotted'];
+const EYES          = ['amber','blue','green','gold'];
+const ROLE_EMOJI    = { leader:'⭐', deputy:'🌟', medicine:'🌿', warrior:'⚔️', apprentice:'🐾', elder:'🌙', kit:'🐱' };
+
+function rnd(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+function genName(role){
+  const pre=rnd(CAT_NAMES.prefixes);
+  if(role==='kit') return pre+'kit';
+  if(role==='apprentice') return pre+'paw';
+  return pre+rnd(CAT_NAMES.suffixes);
+}
+function genCat(role){
+  return { id:Date.now()+Math.random(), name:genName(role), role, coat:rnd(COAT_COLORS),
+    marking:rnd(MARKINGS), eyes:rnd(EYES), personality:rnd(PERSONALITIES),
+    specialty:rnd(SPECIALTIES), age:role==='apprentice'?8:18, loyalty:70+Math.floor(Math.random()*20),
+    injured:false, sick:false };
+}
+
+function initCats(){
+  S.cats = [
+    { id:1, name:S.player.name, role:'leader', coat:S.player.coat, marking:S.player.marking,
+      eyes:S.player.eyes, personality:S.player.personality, specialty:'Hunt',
+      age:24, loyalty:100, injured:false, sick:false },
+    { ...genCat('warrior'), role:'deputy', name:genName('warrior') },
+    { ...genCat('medicine'), role:'medicine' },
+    genCat('warrior'), genCat('warrior'), genCat('apprentice')
+  ];
+}
+
+// ── ZONE GRID ──────────────────────────────────────────────────────────────
+// 5×5 grid. Camp at center (2,2). Map zones to grid positions.
+const GRID_ZONE_IDS = [
+  'forest_birchwhisker_woods', 'moor_windrunner_rise',      'forest_elderleaf_glade',    'river_reedwhisper_bank',    'shadow_nightshade_tangle',
+  'moor_heatherstep_field',    'forest_greenleaf_grove',    'river_minnow_bend',          'forest_fernfall_hollow',    'border_fallen_log',
+  'border_scentline_ridge',    'moor_rabbitflight_hollow',  'CAMP',                       'forest_owlshade_pines',     'shadow_pinebog_thicket',
+  'river_troutpool_marsh',     'forest_bramblekit_copse',   'mixed_meadowbrook_crossing', 'river_silverstream_ford',   'shadow_carrionmist_hollow',
+  'border_twoleg_fence',       'special_moonpool',           'moor_skygrass_ridge',        'mixed_stormfall_ravine',    'special_ancient_oak'
+];
+
+function getZone(id){ return ZONES.find(z=>z.id===id) || null; }
+function isUnlocked(id){
+  if(id==='CAMP') return true;
+  const z=getZone(id); if(!z) return false;
+  return S.resources.territory >= z.unlockRequirement;
+}
+function isExplored(id){ return S.exploredZones.includes(id); }
+
+// ── CANVAS RENDERING ───────────────────────────────────────────────────────
+const canvas=document.getElementById('game-canvas');
+const ctx=canvas.getContext('2d');
+let CELL=64, MAP_X=0, MAP_Y=0;
+let selectedCell=-1;
+let expeditionAnim=null;  // {col,row, progress 0-1, return:bool}
+let campfirePhase=0;
+
+function resizeCanvas(){
+  const dpr=window.devicePixelRatio||1;
+  canvas.width=window.innerWidth*dpr;
+  canvas.height=window.innerHeight*dpr;
+  canvas.style.width=window.innerWidth+'px';
+  canvas.style.height=window.innerHeight+'px';
+  ctx.scale(dpr,dpr);
+  CELL=Math.floor(Math.min(window.innerWidth,window.innerHeight-130)/5.5);
+  MAP_X=Math.floor((window.innerWidth-CELL*5)/2);
+  const hudH=130, botH=70;
+  MAP_Y=Math.floor(hudH+(window.innerHeight-hudH-botH-CELL*5)/2);
+}
+
+function drawStar(x,y,r,color='#e8d48a',opacity=1){
+  ctx.save(); ctx.globalAlpha=opacity;
+  ctx.fillStyle=color; ctx.beginPath();
+  for(let i=0;i<5;i++){
+    const a=Math.PI/2-i*Math.PI*2/5;
+    const bAngle=a-Math.PI/5;
+    i===0?ctx.moveTo(x+r*Math.cos(a),y+r*Math.sin(a)):ctx.lineTo(x+r*Math.cos(a),y+r*Math.sin(a));
+    ctx.lineTo(x+r*0.4*Math.cos(bAngle),y+r*0.4*Math.sin(bAngle));
+  }
+  ctx.closePath(); ctx.fill(); ctx.restore();
+}
+
+function drawCell(col,row,idx){
+  const x=MAP_X+col*CELL, y=MAP_Y+row*CELL;
+  const id=GRID_ZONE_IDS[idx];
+  const isCamp=id==='CAMP';
+  const unlocked=isUnlocked(id);
+  const explored=isExplored(id)||isCamp;
+  const zone=getZone(id);
+  const sel=selectedCell===idx;
+
+  // Background
+  let bgColor=zone?zone.terrain_color:'#1a2030';
+  if(isCamp) bgColor='#2c3a2a';
+  if(!unlocked) bgColor='#0d1117';
+
+  ctx.fillStyle=bgColor;
+  if(!unlocked) ctx.globalAlpha=0.4;
+  roundRect(ctx,x+2,y+2,CELL-4,CELL-4,8);
+  ctx.fill();
+  ctx.globalAlpha=1;
+
+  // Fog overlay for unexplored
+  if(!explored && !isCamp){
+    ctx.fillStyle='rgba(5,8,15,0.72)';
+    roundRect(ctx,x+2,y+2,CELL-4,CELL-4,8);
+    ctx.fill();
+    if(unlocked){
+      ctx.fillStyle='rgba(100,120,160,0.25)';
+      roundRect(ctx,x+2,y+2,CELL-4,CELL-4,8);
+      ctx.fill();
+      // question mark
+      ctx.fillStyle='rgba(140,160,190,0.5)';
+      ctx.font=`${CELL*0.35}px Georgia`;
+      ctx.textAlign='center'; ctx.textBaseline='middle';
+      ctx.fillText('?',x+CELL/2,y+CELL/2);
+    }
+    return;
+  }
+
+  // Terrain texture dots
+  if(zone && explored){
+    ctx.globalAlpha=0.15;
+    ctx.fillStyle='#fff';
+    for(let i=0;i<6;i++){
+      const tx=x+4+(i*13)%( CELL-12), ty=y+4+(i*17)%(CELL-12);
+      ctx.beginPath(); ctx.arc(tx,ty,1,0,Math.PI*2); ctx.fill();
+    }
+    ctx.globalAlpha=1;
+  }
+
+  // Camp special rendering
+  if(iscamp()){
+    // Campfire flicker
+    const fl=0.85+Math.sin(campfirePhase)*0.15;
+    ctx.fillStyle=`rgba(232,145,74,${fl})`;
+    ctx.font=`${CELL*0.38}px serif`;
+    ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText('🔥',x+CELL/2,y+CELL/2);
+
+    // Small cat dots at camp
+    S.cats.filter(c=>!c.onPatrol).slice(0,5).forEach((c,i)=>{
+      const angle=(i/5)*Math.PI*2;
+      const cx2=x+CELL/2+Math.cos(angle)*CELL*0.28;
+      const cy2=y+CELL/2+Math.sin(angle)*CELL*0.28;
+      ctx.fillStyle=coatColor(c.coat);
+      ctx.beginPath(); ctx.arc(cx2,cy2,CELL*0.07,0,Math.PI*2); ctx.fill();
+    });
+  } else if(zone && explored){
+    // Zone type icon
+    const icons={'Forest':'🌲','River':'💧','Moor':'🌾','Shadow Forest':'🌑','Rival Border':'⚔️','Special':'✦','Mixed':'🍃'};
+    ctx.font=`${CELL*0.28}px serif`;
+    ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText(icons[zone.type]||'?',x+CELL/2,y+CELL/2+2);
+
+    // Richness dots
+    for(let i=0;i<zone.richness;i++){
+      drawStar(x+8+i*10,y+CELL-10,3,'#e8d48a',0.6);
+    }
+  }
+
+  // Zone name
+  if(explored && !iscamp() && CELL>=56){
+    ctx.fillStyle='rgba(255,255,255,0.75)';
+    ctx.font=`bold ${Math.max(8,CELL*0.13)}px Georgia`;
+    ctx.textAlign='center'; ctx.textBaseline='bottom';
+    ctx.fillText(zone?zone.name.split(' ')[0]:'',x+CELL/2,y+CELL-5);
+  }
+
+  // Selection highlight
+  if(sel){
+    ctx.strokeStyle='#e8d48a';
+    ctx.lineWidth=3;
+    roundRect(ctx,x+2,y+2,CELL-4,CELL-4,8);
+    ctx.stroke();
+  }
+
+  // Expedition cat animation
+  if(expeditionAnim && expeditionAnim.zoneIdx===idx){
+    const t=expeditionAnim.progress;
+    const ex=x+CELL*0.3+Math.sin(t*Math.PI*4)*4;
+    const ey=y+CELL*0.4;
+    ctx.fillStyle='#e8d48a';
+    ctx.beginPath(); ctx.arc(ex,ey,CELL*0.09,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle='#fff';
+    ctx.font=`${CELL*0.15}px serif`;
+    ctx.textAlign='center';
+    ctx.fillText('⚔️',ex,ey+1);
+  }
+}
+
+function iscamp(){ return false; } // overridden in draw loop
+
+function coatColor(coat){
+  const map={orange:'#d88040',gray:'#808090',black:'#303040',white:'#e8e8f0',brown:'#8b6040',calico:'#d08050'};
+  return map[coat]||'#888';
+}
+
+function roundRect(ctx,x,y,w,h,r){
+  ctx.beginPath();
+  ctx.moveTo(x+r,y);
+  ctx.lineTo(x+w-r,y); ctx.arcTo(x+w,y,x+w,y+r,r);
+  ctx.lineTo(x+w,y+h-r); ctx.arcTo(x+w,y+h,x+w-r,y+h,r);
+  ctx.lineTo(x+r,y+h); ctx.arcTo(x,y+h,x,y+h-r,r);
+  ctx.lineTo(x,y+r); ctx.arcTo(x,y,x+r,y,r);
+  ctx.closePath();
+}
+
+function drawMap(){
+  ctx.clearRect(0,0,canvas.width/window.devicePixelRatio,canvas.height/window.devicePixelRatio);
+
+  // Night sky background
+  ctx.fillStyle='#070b12';
+  ctx.fillRect(0,0,window.innerWidth,window.innerHeight);
+
+  // Tiny star field
+  ctx.fillStyle='rgba(255,255,255,0.4)';
+  for(let i=0;i<40;i++){
+    ctx.beginPath();
+    ctx.arc(((i*137)%window.innerWidth),((i*89)%120),0.8,0,Math.PI*2);
+    ctx.fill();
+  }
+
+  campfirePhase+=0.08;
+
+  for(let row=0;row<5;row++){
+    for(let col=0;col<5;col++){
+      const idx=row*5+col;
+      // Override iscamp for this cell
+      const _id=GRID_ZONE_IDS[idx];
+      window._drawingCamp=_id==='CAMP';
+      drawCell(col,row,idx);
+    }
+  }
+  window._drawingCamp=false;
+}
+
+// Patch iscamp to use drawing flag
+function iscamp(){ return window._drawingCamp||false; }
+
+// ── HUD UPDATE ─────────────────────────────────────────────────────────────
+function updateHUD(){
+  const r=S.resources;
+  ['prey','herb','territory','morale'].forEach((k,i)=>{
+    const keys=['prey','herbs','territory','morale'];
+    const key=keys[i];
+    const val=Math.round(r[key]||r[k]||0);
+    const pct=Math.min(100,Math.max(0,val));
+    document.getElementById('fill-'+k).style.width=pct+'%';
+    document.getElementById('val-'+k).textContent=val;
+  });
+
+  document.getElementById('moon-display').textContent=`Moon ${S.moon}`;
+  document.getElementById('season-display').textContent=S.season;
+
+  // XP bar
+  const arc=STORY_ARCS[S.arcIndex];
+  const rank=arc?arc.ranks[S.rankIndex]:null;
+  const nextRank=arc?arc.ranks[S.rankIndex+1]:null;
+  const rankName=rank?rank.rank_name:'Brightflame Legend';
+  const xpNeeded=nextRank?nextRank.xp_threshold:rank?rank.xp_threshold+500:500;
+  const xpBase=rank?rank.xp_threshold:0;
+  const pct=nextRank?((S.xp-xpBase)/(xpNeeded-xpBase)*100):100;
+  document.getElementById('xp-label').textContent=`${rankName} · ${S.xp} / ${xpNeeded} xp`;
+  document.getElementById('xp-fill').style.width=Math.max(0,Math.min(100,pct))+'%';
+}
+
+// ── ZONE PANEL ─────────────────────────────────────────────────────────────
+function openZonePanel(idx){
+  const id=GRID_ZONE_IDS[idx];
+  if(id==='CAMP'){ openCampPanel(); return; }
+  const zone=getZone(id);
+  if(!zone) return;
+  if(!isUnlocked(id)){ showTip('Expand territory to unlock this zone!'); return; }
+
+  selectedCell=idx;
+  S.activeExpedition={ zoneId:id, zoneIdx:idx, selectedCats:[] };
+
+  document.getElementById('zp-type').textContent=zone.type;
+  document.getElementById('zp-name').textContent=zone.name;
+  document.getElementById('zp-desc').textContent=zone.description;
+  document.getElementById('zp-rich').textContent='★'.repeat(zone.richness)+'☆'.repeat(5-zone.richness);
+  document.getElementById('zp-danger').textContent='★'.repeat(zone.danger)+'☆'.repeat(5-zone.danger);
+
+  renderCatList();
+  openPanel('zone-panel');
+}
+
+function renderCatList(){
+  const list=document.getElementById('cat-list');
+  const avail=S.cats.filter(c=>!c.onPatrol && c.role!=='kit');
+  list.innerHTML=avail.map(c=>`
+    <div class="cat-row" data-id="${c.id}" onclick="toggleCat('${c.id}')">
+      <div class="cat-portrait ${S.activeExpedition?.selectedCats.includes(c.id)?'selected':''}">${ROLE_EMOJI[c.role]||'🐾'}</div>
+      <div class="cat-info">
+        <div class="cat-name">${c.name}</div>
+        <div class="cat-role">${c.role} · ${c.personality}</div>
+        <div class="cat-traits">${c.specialty} · Loyalty ${c.loyalty}</div>
+      </div>
+      <div class="cat-check">${S.activeExpedition?.selectedCats.includes(c.id)?'✓':''}</div>
+    </div>`).join('');
+}
+
+window.toggleCat=function(id){
+  if(!S.activeExpedition) return;
+  const sel=S.activeExpedition.selectedCats;
+  const idx=sel.indexOf(id);
+  if(idx>=0) sel.splice(idx,1);
+  else if(sel.length<4) sel.push(id);
+  renderCatList();
+};
+
+// ── CAMP PANEL ─────────────────────────────────────────────────────────────
+function openCampPanel(){
+  const r=S.resources;
+  document.getElementById('camp-sub').textContent=`${S.cats.length} cats · Prey ${r.prey} · Herbs ${r.herbs}`;
+
+  const catHtml=S.cats.map(c=>`
+    <div class="cat-row">
+      <div class="cat-portrait">${ROLE_EMOJI[c.role]||'🐾'}</div>
+      <div class="cat-info">
+        <div class="cat-name">${c.name}</div>
+        <div class="cat-role">${c.role} · Loyalty ${c.loyalty}${c.injured?' 🩸':''}`+
+        `${c.sick?' 🤒':''}</div>
+      </div>
+    </div>`).join('');
+  document.getElementById('camp-cat-list').innerHTML=catHtml;
+
+  const structHtml=Object.entries(STRUCTURE_META).map(([key,meta])=>{
+    const level=S.structures[key]||0;
+    const cost=meta.cost(level+1);
+    const canUpgrade=level<meta.maxLevel && r.prey>=cost.prey && r.herbs>=cost.herbs;
+    const atMax=level>=meta.maxLevel;
+    return `<div class="structure-row">
+      <div class="structure-icon">${meta.icon}</div>
+      <div class="structure-info">
+        <div class="structure-name">${meta.name}</div>
+        <div class="structure-level">Level ${level}/${meta.maxLevel}</div>
+      </div>
+      ${atMax?'<span style="font-size:11px;color:var(--star)">MAX</span>':
+        `<button class="upgrade-btn" ${canUpgrade?'':'disabled'} onclick="upgradeStructure('${key}')">
+          Upgrade<br><span style="font-size:10px">🍖${cost.prey} 🌿${cost.herbs}</span>
+        </button>`}
+    </div>`;
+  }).join('');
+  document.getElementById('structure-list').innerHTML=structHtml;
+
+  openPanel('camp-panel');
+}
+
+window.upgradeStructure=function(key){
+  const meta=STRUCTURE_META[key];
+  const level=S.structures[key]||0;
+  const cost=meta.cost(level+1);
+  if(S.resources.prey<cost.prey||S.resources.herbs<cost.herbs) return;
+  S.resources.prey=Math.max(0,S.resources.prey-cost.prey);
+  S.resources.herbs=Math.max(0,S.resources.herbs-cost.herbs);
+  S.structures[key]=(S.structures[key]||0)+1;
+  const texts=UPGRADE_TEXT[key];
+  if(texts) showTip(texts[level]||texts[0]);
+  openCampPanel();
+  updateHUD();
+  save();
+};
+
+// ── PANEL HELPERS ──────────────────────────────────────────────────────────
+function openPanel(id){
+  closeAllPanels();
+  document.getElementById(id).classList.add('open');
+  document.getElementById('dimmer').classList.add('on');
+}
+function closeAllPanels(){
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('open'));
+  document.getElementById('dimmer').classList.remove('on');
+  selectedCell=-1;
+  S.activeExpedition=null;
+}
+
+// ── EXPEDITION LAUNCH ──────────────────────────────────────────────────────
+function launchExpedition(){
+  if(!S.activeExpedition || S.activeExpedition.selectedCats.length===0){
+    showTip('Choose at least one cat for the patrol!');
+    return;
+  }
+  closeAllPanels();
+  const exp=S.activeExpedition;
+
+  // Mark cats as on patrol
+  exp.selectedCats.forEach(id=>{
+    const c=S.cats.find(ct=>ct.id==id);
+    if(c) c.onPatrol=true;
+  });
+
+  // Animate
+  expeditionAnim={ zoneIdx:exp.zoneIdx, progress:0 };
+  hideTutorial();
+
+  // After animation, start math
+  setTimeout(()=>{
+    expeditionAnim=null;
+    startMath(exp);
+  }, 1800);
+}
+
+// ── MATH SESSION ───────────────────────────────────────────────────────────
+let mathTimer=null, mathTimeLeft=20;
+const MATH_TIME=20;
+
+function startMath(exp){
+  const zone=getZone(exp.zoneId);
+  S.mathSession={
+    exp, zone,
+    problems: Array.from({length:5},()=>generateProblem()),
+    current: 0,
+    results: [],  // true/false
+    timings: [],
+    input: '',
+    score: 0
+  };
+  document.getElementById('math-overlay').classList.remove('hidden');
+  document.getElementById('math-zone-label').textContent=zone?zone.name:'Patrol';
+  renderMathProblem();
+}
+
+function renderMathProblem(){
+  const ms=S.mathSession;
+  const p=ms.problems[ms.current];
+  document.getElementById('math-problem').textContent=p.display;
+  document.getElementById('math-display').textContent='_';
+  document.getElementById('math-hint').textContent='';
+  ms.input='';
+
+  // Progress dots
+  const dots=document.getElementById('math-progress');
+  dots.innerHTML=ms.problems.map((_,i)=>{
+    let cls='math-dot';
+    if(i<ms.current) cls+= ms.results[i]?' correct':' wrong';
+    else if(i===ms.current) cls+=' current';
+    return `<div class="${cls}"></div>`;
+  }).join('');
+
+  // Timer
+  mathTimeLeft=MATH_TIME;
+  clearInterval(mathTimer);
+  mathTimer=setInterval(tickMathTimer,100);
+  document.getElementById('math-timer-bar').style.width='100%';
+}
+
+function tickMathTimer(){
+  mathTimeLeft-=0.1;
+  const pct=Math.max(0,mathTimeLeft/MATH_TIME*100);
+  document.getElementById('math-timer-bar').style.width=pct+'%';
+  document.getElementById('math-timer-bar').style.background=
+    mathTimeLeft>8?'var(--herb)':mathTimeLeft>4?'#d4a820':'var(--blood)';
+  if(mathTimeLeft<=0){ submitMathAnswer(true); }
+}
+
+function submitMathAnswer(timeout=false){
+  clearInterval(mathTimer);
+  const ms=S.mathSession;
+  const p=ms.problems[ms.current];
+  const userAns=parseInt(ms.input)||0;
+  const correct=!timeout && userAns===p.answer;
+  const timeUsed=MATH_TIME-mathTimeLeft;
+  const fast=timeUsed<12 && !timeout;
+
+  ms.results.push(correct);
+  ms.timings.push(timeUsed);
+  updateMastery(p.key,correct);
+
+  if(correct){
+    const bonus=fast?Math.floor((MATH_TIME-timeUsed)*0.9):0;
+    ms.score+=15+bonus;
+    S.xp+=8;
+    floatNumber('+'.concat(15+bonus), true);
+    document.getElementById('math-hint').textContent=fast?`Fast! +${bonus} bonus`:'Correct!';
+  } else {
+    ms.score=Math.max(0,ms.score-6);
+    document.getElementById('math-overlay').classList.add('shake');
+    setTimeout(()=>document.getElementById('math-overlay').classList.remove('shake'),400);
+    document.getElementById('math-hint').textContent=timeout?`Time! Answer: ${p.answer}`:`Wrong. Answer: ${p.answer}`;
+    setTimeout(()=>{ document.getElementById('math-hint').textContent=''; },1200);
+  }
+
+  document.getElementById('math-display').textContent=timeout?p.answer:userAns;
+
+  ms.current++;
+  if(ms.current>=ms.problems.length){
+    setTimeout(()=>finishMath(),1200);
+  } else {
+    setTimeout(()=>renderMathProblem(),900);
+  }
+}
+
+document.querySelectorAll('.num-btn').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    const n=btn.dataset.n;
+    if(!S.mathSession) return;
+    const ms=S.mathSession;
+    if(n==='del'){ ms.input=ms.input.slice(0,-1)||''; }
+    else { if(ms.input.length<4) ms.input+=n; }
+    document.getElementById('math-display').textContent=ms.input||'_';
+  });
+});
+document.getElementById('submit-btn').addEventListener('click',()=>submitMathAnswer());
+
+function finishMath(){
+  document.getElementById('math-overlay').classList.add('hidden');
+  const ms=S.mathSession;
+  const correctCount=ms.results.filter(Boolean).length;
+  const zone=ms.zone;
+
+  // Calculate expedition outcome
+  const outcome=calcOutcome(correctCount, ms.timings, zone, ms.exp.selectedCats);
+
+  // Apply resources
+  S.resources.prey=Math.min(getMaxPrey(),S.resources.prey+outcome.prey);
+  S.resources.herbs=Math.min(100,S.resources.herbs+outcome.herbs);
+  S.resources.territory=Math.min(100,S.resources.territory+outcome.territory);
+
+  // Check for injury
+  if(Math.random()<outcome.injuryRisk){
+    const patrolCats=ms.exp.selectedCats.map(id=>S.cats.find(c=>c.id==id)).filter(Boolean);
+    if(patrolCats.length>0){
+      const victim=rnd(patrolCats);
+      victim.injured=true;
+    }
+  }
+
+  // Unmark patrol
+  ms.exp.selectedCats.forEach(id=>{ const c=S.cats.find(ct=>ct.id==id); if(c) c.onPatrol=false; });
+
+  // Mark zone explored
+  if(!S.exploredZones.includes(ms.exp.zoneId)) S.exploredZones.push(ms.exp.zoneId);
+
+  // Moon score
+  S.moonScore+=ms.score;
+  S.totalScore+=ms.score;
+
+  // Check rank up
+  checkRankUp();
+
+  // Pick event
+  const ev=pickEvent(zone, ms.exp.zoneId);
+  if(ev){
+    S.pendingEvent=ev;
+    showEvent(ev);
+  } else {
+    showResolution(outcome, correctCount, ms.score);
+  }
+  updateHUD();
+  save();
+}
+
+function getMaxPrey(){
+  const levels=[60,80,100];
+  return levels[Math.min(2,(S.structures.fresh_kill_pile||1)-1)];
+}
+
+function calcOutcome(correct, timings, zone, catIds){
+  const cats=catIds.map(id=>S.cats.find(c=>c.id==id)).filter(Boolean);
+  const personality=cats[0]?.personality||'Brave';
+  const avgLoyalty=cats.reduce((s,c)=>s+c.loyalty,0)/(cats.length||1);
+  const moraleBonus=S.resources.morale>=70?1.1:S.resources.morale<40?0.8:1.0;
+  const seasonMod=SEASON_MODIFIERS[S.season]||SEASON_MODIFIERS.Greenleaf;
+
+  let prey=0, herbs=0, territory=0, injuryRisk=0;
+
+  if(correct>=5){
+    prey=Math.floor((28+Math.random()*7)*seasonMod.prey);
+    herbs=Math.floor(20+Math.random()*5);
+    territory=12+Math.floor(Math.random()*3);
+    injuryRisk=0.05;
+  } else if(correct>=4){
+    prey=Math.floor((18+Math.random()*4)*seasonMod.prey);
+    herbs=Math.floor(12+Math.random()*4);
+    territory=7+Math.floor(Math.random()*3);
+    injuryRisk=0.08;
+  } else if(correct>=3){
+    prey=Math.floor((10+Math.random()*4)*seasonMod.prey);
+    herbs=Math.floor(7+Math.random()*3);
+    territory=3+Math.floor(Math.random()*2);
+    injuryRisk=0.12;
+  } else if(correct>=2){
+    prey=Math.floor((4+Math.random()*3)*seasonMod.prey);
+    herbs=Math.floor(3+Math.random()*2);
+    territory=-3+Math.floor(Math.random()*2);
+    injuryRisk=0.20;
+  } else {
+    prey=Math.floor((1+Math.random()*2)*seasonMod.prey);
+    herbs=Math.floor(1+Math.random()*2);
+    territory=-5-Math.floor(Math.random()*3);
+    injuryRisk=0.40;
+  }
+
+  // Personality modifiers
+  if(personality==='Fierce'){ territory=Math.floor(territory*1.3); prey=Math.floor(prey*0.9); }
+  if(personality==='Clever'){ herbs=Math.floor(herbs*1.2); }
+  if(personality==='Brave'){ territory=Math.floor(territory*1.1); }
+  if(personality==='Loyal'){ const mult=avgLoyalty>70?1.2:0.9; prey=Math.floor(prey*mult); }
+
+  prey=Math.floor(prey*moraleBonus);
+
+  // Zone richness bonus
+  if(zone){ prey=Math.floor(prey*(0.8+zone.richness*0.08)); }
+
+  return { prey:Math.max(0,prey), herbs:Math.max(0,herbs), territory, injuryRisk };
+}
+
+// ── EVENT SYSTEM ───────────────────────────────────────────────────────────
+function pickEvent(zone, zoneId){
+  const z=getZone(zoneId);
+  const isLowTerritory=S.resources.territory<30;
+  const isLeafBare=S.season==='Leaf-bare';
+
+  // Filter zone events first
+  let candidates=EVENTS.filter(e=>{
+    if(S.seenEventIds.filter(id=>id===e.id).length>=2) return false;
+    if(z && z.events.includes(e.id)) return true;
+    return false;
+  });
+
+  if(candidates.length===0){
+    // Fallback to any event
+    candidates=EVENTS.filter(e=>S.seenEventIds.filter(id=>id===e.id).length<3);
+  }
+  if(candidates.length===0) candidates=EVENTS;
+
+  // Weight
+  const weighted=candidates.map(e=>{
+    let w=e.weight.base||1;
+    if(isLeafBare && e.weight.leaf_bare) w=e.weight.leaf_bare;
+    if(isLowTerritory && e.weight.low_territory) w=Math.max(w,e.weight.low_territory);
+    return { e, w };
+  });
+
+  const total=weighted.reduce((s,x)=>s+x.w,0);
+  let r=Math.random()*total;
+  for(const { e, w } of weighted){
+    r-=w; if(r<=0){ S.seenEventIds.push(e.id); return e; }
+  }
+  return candidates[0];
+}
+
+function showEvent(ev){
+  document.getElementById('event-screen').classList.remove('hidden');
+  document.getElementById('ev-icon').textContent=ev.icon;
+  document.getElementById('ev-type').textContent=ev.type.toUpperCase();
+  document.getElementById('ev-title').textContent=ev.title;
+  document.getElementById('ev-text').textContent=ev.text;
+
+  const choicesEl=document.getElementById('ev-choices');
+  if(ev.hasChoice && ev.choices.length>0){
+    choicesEl.innerHTML=ev.choices.map((c,i)=>`
+      <button class="choice-btn" onclick="chooseEvent(${i})">
+        <span class="choice-label">${c.label}</span>
+        <span class="choice-effect">${c.effect_description}</span>
+      </button>`).join('');
+  } else {
+    choicesEl.innerHTML=`<button class="continue-btn" onclick="chooseEvent(-1)">Continue →</button>`;
+  }
+}
+
+window.chooseEvent=function(idx){
+  document.getElementById('event-screen').classList.add('hidden');
+  const ev=S.pendingEvent;
+  S.pendingEvent=null;
+
+  // Apply rough effects based on choice index
+  if(idx>=0 && ev && ev.choices[idx]){
+    // Heuristic effects: choice 0 = aggressive/resource, choice 1 = safe, choice 2 = diplomatic
+    const effects=[
+      { prey:5, territory:5, herbs:-2, morale:5 },
+      { prey:3, territory:2, herbs:5, morale:3 },
+      { prey:2, territory:-2, herbs:8, morale:8 }
+    ];
+    const e=effects[idx%3];
+    S.resources.prey=Math.min(getMaxPrey(),Math.max(0,S.resources.prey+e.prey));
+    S.resources.herbs=Math.min(100,Math.max(0,S.resources.herbs+e.herbs));
+    S.resources.territory=Math.min(100,Math.max(0,S.resources.territory+e.territory));
+    S.resources.morale=Math.min(100,Math.max(0,S.resources.morale+e.morale));
+  }
+
+  updateHUD();
+  // Go to resolution
+  showResolution(null, 0, S.moonScore, true);
+};
+
+// ── RESOLUTION ─────────────────────────────────────────────────────────────
+function showResolution(outcome, correct, score, fromEvent=false){
+  document.getElementById('resolution').classList.remove('hidden');
+  document.getElementById('res-moon').textContent=`Moon ${S.moon} · ${S.season}`;
+  document.getElementById('res-score-num').textContent=score;
+
+  if(outcome && !fromEvent){
+    const changes=[
+      { icon:'🍖', name:'Prey', delta:outcome.prey },
+      { icon:'🌿', name:'Herbs', delta:outcome.herbs },
+      { icon:'⚑', name:'Territory', delta:outcome.territory },
+    ];
+    document.getElementById('res-changes').innerHTML=changes.map(c=>`
+      <div class="res-stat-change">
+        <div class="res-stat-icon">${c.icon}</div>
+        <div class="res-stat-name">${c.name}</div>
+        <div class="res-stat-delta ${c.delta>0?'delta-pos':c.delta<0?'delta-neg':'delta-zero'}">
+          ${c.delta>0?'+':''}${c.delta}
+        </div>
+      </div>`).join('');
+  }
+
+  // Narrative
+  const narr=outcomeNarrative(correct);
+  document.getElementById('res-narrative').textContent=narr;
+
+  // Breadcrumb
+  const arc=STORY_ARCS[S.arcIndex];
+  if(arc){
+    const crumbs=arc.breadcrumbs;
+    const crumb=crumbs[S.breadcrumbIndex % crumbs.length];
+    S.breadcrumbIndex++;
+    document.getElementById('breadcrumb-box').textContent=`✦ ${crumb}`;
+  }
+}
+
+function outcomeNarrative(correct){
+  if(correct>=5) return 'The patrol returns with pride in their eyes and prey stacked high. StarClan watches with satisfaction.';
+  if(correct>=4) return 'A good hunt. The patrol is tired but warm, and the camp feels a little safer tonight.';
+  if(correct>=3) return 'The patrol does its duty. Some prey, some herbs, a border held. Not glory, but the quiet strength that keeps a Clan alive.';
+  if(correct>=2) return 'A hard mission. The patrol limps back, half-empty-pawed, but together.';
+  return 'The patrol returns worn and discouraged. The Clan will need to push harder next moon.';
+}
+
+document.getElementById('res-continue').addEventListener('click', ()=>{
+  document.getElementById('resolution').classList.add('hidden');
+  checkRankUp(true);
+});
+
+// ── END MOON ───────────────────────────────────────────────────────────────
+function endMoon(){
+  closeAllPanels();
+  // Deduct resources
+  const deplete=S.cats.length*2;
+  const sickCount=S.cats.filter(c=>c.sick).length;
+  const injCount=S.cats.filter(c=>c.injured).length;
+  S.resources.prey=Math.max(0,S.resources.prey-deplete);
+  S.resources.herbs=Math.max(0,S.resources.herbs-sickCount*5-injCount*3);
+
+  // Morale effects
+  if(S.resources.prey<20) S.resources.morale=Math.max(0,S.resources.morale-10);
+  if(S.resources.prey>60) S.resources.morale=Math.min(100,S.resources.morale+5);
+
+  // Loyal cats: loyalty drift
+  S.cats.forEach(c=>{
+    if(S.resources.prey<10) c.loyalty=Math.max(0,c.loyalty-10);
+    else if(S.resources.prey>50) c.loyalty=Math.min(100,c.loyalty+2);
+  });
+
+  // Heal injured over time
+  S.cats.filter(c=>c.injured).forEach(c=>{ if(Math.random()<0.4) c.injured=false; });
+  S.cats.filter(c=>c.sick).forEach(c=>{ if(Math.random()<0.3) c.sick=false; });
+
+  // Advance moon
+  S.moon++;
+  S.seasonMoon=(S.seasonMoon+1);
+  if(S.seasonMoon>=3){
+    S.seasonMoon=0;
+    const si=SEASONS.indexOf(S.season);
+    S.season=SEASONS[(si+1)%4];
+    showTip(`${S.season} begins — ${SEASON_FLAVOR[S.season]?.arrival_text||''}`);
+  }
+
+  S.moonScore=0;
+  updateHUD();
+  save();
+}
+
+// ── RANK UP ─────────────────────────────────────────────────────────────────
+function checkRankUp(showIfPending=false){
+  const arc=STORY_ARCS[S.arcIndex];
+  if(!arc) return;
+  const nextRankIdx=S.rankIndex+1;
+  if(nextRankIdx>=arc.ranks.length) return;
+  const nextRank=arc.ranks[nextRankIdx];
+  if(S.xp>=nextRank.xp_threshold){
+    S.rankIndex=nextRankIdx;
+    if(showIfPending) showCinematic(arc, nextRankIdx);
+    else S._pendingCinematic={ arc, rankIdx: nextRankIdx };
+  }
+}
+
+function showCinematic(arc, rankIdx){
+  const rank=arc.ranks[rankIdx];
+  const name=S.player.name;
+  const clan=S.player.clan;
+  const text=rank.cinematic_text.replace(/{name}/g,name).replace(/{clan}/g,clan);
+  const msg=rank.starClan_message;
+
+  document.getElementById('cin-rank').textContent=rank.rank_name;
+  document.getElementById('cin-title-text').textContent=rank.cinematic_title;
+  document.getElementById('cin-text').textContent=text;
+  document.getElementById('cin-msg').textContent=msg;
+  document.getElementById('cinematic').classList.remove('hidden');
+}
+
+document.getElementById('cin-continue').addEventListener('click',()=>{
+  document.getElementById('cinematic').classList.add('hidden');
+});
+
+// ── CAT MAKER ─────────────────────────────────────────────────────────────
+const makerState={ name:'', clan:'ThunderClan', coat:'orange', marking:'tabby', eyes:'amber', personality:'Brave' };
+
+function initOptionGroups(){
+  const groups=[
+    { id:'clan-opts', key:'clan' },
+    { id:'coat-opts', key:'coat' },
+    { id:'marking-opts', key:'marking' },
+    { id:'eye-opts', key:'eyes' },
+    { id:'personality-opts', key:'personality' }
+  ];
+  groups.forEach(({ id, key })=>{
+    document.getElementById(id).querySelectorAll('.maker-opt').forEach(btn=>{
+      btn.addEventListener('click',()=>{
+        document.getElementById(id).querySelectorAll('.maker-opt').forEach(b=>b.classList.remove('sel'));
+        btn.classList.add('sel');
+        makerState[key]=btn.dataset.val;
+        if(key==='clan') updateProphecy();
+        drawMakerCat();
+      });
+    });
+  });
+  // Default selections
+  document.querySelector('[data-val="ThunderClan"]').classList.add('sel');
+  document.querySelector('[data-val="orange"]').classList.add('sel');
+  document.querySelector('[data-val="tabby"]').classList.add('sel');
+  document.querySelector('[data-val="amber"]').classList.add('sel');
+  document.querySelector('[data-val="Brave"]').classList.add('sel');
+  drawMakerCat();
+  updateProphecy();
+}
+
+function updateProphecy(){
+  const p=PROPHECIES[makerState.clan];
+  if(p) document.getElementById('maker-prophecy-text').textContent=`"${p[0]}"`;
+}
+
+function drawMakerCat(){
+  const mc=document.getElementById('maker-canvas');
+  const mctx=mc.getContext('2d');
+  mctx.clearRect(0,0,120,120);
+
+  // Body
+  const coatMap={orange:'#d87830',gray:'#7a8090',black:'#2a2838',white:'#e0e0ec',brown:'#8b6040',calico:'#d08050'};
+  const eyeMap={amber:'#d88030',blue:'#4080d0',green:'#40a060',gold:'#c8a020'};
+  const c=coatMap[makerState.coat]||'#888';
+  const e=eyeMap[makerState.eyes]||'#888';
+
+  mctx.fillStyle=c;
+  // Body
+  mctx.beginPath(); mctx.ellipse(60,75,30,28,0,0,Math.PI*2); mctx.fill();
+  // Head
+  mctx.beginPath(); mctx.ellipse(60,45,22,20,0,0,Math.PI*2); mctx.fill();
+  // Ears
+  mctx.beginPath(); mctx.moveTo(42,32); mctx.lineTo(35,18); mctx.lineTo(52,28); mctx.closePath(); mctx.fill();
+  mctx.beginPath(); mctx.moveTo(78,32); mctx.lineTo(85,18); mctx.lineTo(68,28); mctx.closePath(); mctx.fill();
+  // Tail
+  mctx.beginPath(); mctx.moveTo(85,85); mctx.quadraticCurveTo(110,60,100,40); mctx.lineWidth=8; mctx.strokeStyle=c; mctx.stroke();
+
+  // Tabby markings
+  if(makerState.marking==='tabby'){
+    mctx.strokeStyle='rgba(0,0,0,0.2)'; mctx.lineWidth=3;
+    for(let i=0;i<3;i++){ mctx.beginPath(); mctx.moveTo(46+i*8,55); mctx.lineTo(44+i*8,85); mctx.stroke(); }
+  } else if(makerState.marking==='spotted'){
+    mctx.fillStyle='rgba(0,0,0,0.18)';
+    for(let i=0;i<4;i++){ mctx.beginPath(); mctx.arc(50+i*10,65+((i%2)*12),4,0,Math.PI*2); mctx.fill(); }
+  } else if(makerState.marking==='tipped'){
+    mctx.fillStyle='rgba(255,255,255,0.35)';
+    mctx.beginPath(); mctx.ellipse(60,85,15,8,0,0,Math.PI*2); mctx.fill();
+  }
+
+  // Eyes
+  mctx.fillStyle='#fff'; mctx.beginPath(); mctx.ellipse(52,43,7,5,0,0,Math.PI*2); mctx.fill();
+  mctx.fillStyle='#fff'; mctx.beginPath(); mctx.ellipse(68,43,7,5,0,0,Math.PI*2); mctx.fill();
+  mctx.fillStyle=e; mctx.beginPath(); mctx.ellipse(52,43,4,4,0,0,Math.PI*2); mctx.fill();
+  mctx.fillStyle=e; mctx.beginPath(); mctx.ellipse(68,43,4,4,0,0,Math.PI*2); mctx.fill();
+  mctx.fillStyle='#000'; mctx.beginPath(); mctx.ellipse(52,43,2,3,0,0,Math.PI*2); mctx.fill();
+  mctx.fillStyle='#000'; mctx.beginPath(); mctx.ellipse(68,43,2,3,0,0,Math.PI*2); mctx.fill();
+  // Nose
+  mctx.fillStyle='#e08090'; mctx.beginPath(); mctx.ellipse(60,50,3,2,0,0,Math.PI*2); mctx.fill();
+  // Whiskers
+  mctx.strokeStyle='rgba(255,255,255,0.7)'; mctx.lineWidth=1;
+  [[38,49,55,50],[38,52,55,52],[38,55,55,54]].forEach(([x1,y1,x2,y2])=>{ mctx.beginPath(); mctx.moveTo(x1,y1); mctx.lineTo(x2,y2); mctx.stroke(); });
+  [[82,49,65,50],[82,52,65,52],[82,55,65,54]].forEach(([x1,y1,x2,y2])=>{ mctx.beginPath(); mctx.moveTo(x1,y1); mctx.lineTo(x2,y2); mctx.stroke(); });
+}
+
+document.getElementById('maker-name').addEventListener('input',e=>{ makerState.name=e.target.value; });
+
+document.getElementById('maker-start-btn').addEventListener('click',()=>{
+  const name=makerState.name.trim()||'Firekit';
+  Object.assign(S.player,{ name, clan:makerState.clan, coat:makerState.coat,
+    marking:makerState.marking, eyes:makerState.eyes, personality:makerState.personality });
+  document.getElementById('cat-maker').classList.add('hidden');
+  S.initialized=true;
+  initGame();
+});
+
+// ── GAME INIT ──────────────────────────────────────────────────────────────
+function initGame(){
+  initCats();
+  S.unlockedZones=ZONES.filter(z=>z.unlockRequirement===0).map(z=>z.id);
+  S.exploredZones=['forest_greenleaf_grove','river_minnow_bend'];
+  updateHUD();
+  // Show initial breadcrumb
+  const arc=STORY_ARCS[0];
+  if(arc) showTip(`✦ ${arc.breadcrumbs[0]}`);
+  gameLoop();
+}
+
+// ── CANVAS INTERACTION ─────────────────────────────────────────────────────
+canvas.addEventListener('click',e=>{
+  if(!S.initialized) return;
+  const rect=canvas.getBoundingClientRect();
+  const mx=e.clientX-rect.left, my=e.clientY-rect.top;
+  const col=Math.floor((mx-MAP_X)/CELL);
+  const row=Math.floor((my-MAP_Y)/CELL);
+  if(col<0||col>=5||row<0||row>=5) return;
+  const idx=row*5+col;
+  openZonePanel(idx);
+});
+
+// ── BUTTON WIRING ──────────────────────────────────────────────────────────
+document.getElementById('btn-camp').addEventListener('click',openCampPanel);
+document.getElementById('btn-end-moon').addEventListener('click',endMoon);
+document.getElementById('btn-end-moon-camp').addEventListener('click',()=>{ closeAllPanels(); endMoon(); });
+document.getElementById('btn-launch').addEventListener('click',launchExpedition);
+document.getElementById('dimmer').addEventListener('click',closeAllPanels);
+
+// ── FLOATING NUMBER ─────────────────────────────────────────────────────────
+function floatNumber(text, positive){
+  const el=document.createElement('div');
+  el.className='float-num';
+  el.style.color=positive?'var(--herb)':'var(--blood)';
+  el.style.left=Math.floor(window.innerWidth/2-20)+'px';
+  el.style.top=Math.floor(window.innerHeight/2)+'px';
+  el.textContent=text;
+  document.body.appendChild(el);
+  setTimeout(()=>el.remove(),900);
+}
+
+// ── TUTORIAL TIP ────────────────────────────────────────────────────────────
+let tutorialShown=false;
+function showTip(msg){
+  const tip=document.getElementById('tutorial-tip');
+  tip.textContent=msg;
+  tip.classList.remove('hidden');
+  clearTimeout(window._tipTimer);
+  window._tipTimer=setTimeout(()=>tip.classList.add('hidden'),4000);
+}
+function hideTutorial(){ document.getElementById('tutorial-tip').classList.add('hidden'); tutorialShown=true; }
+
+// ── SAVE / LOAD ─────────────────────────────────────────────────────────────
+function save(){
+  try { localStorage.setItem('scw_save',JSON.stringify({ player:S.player, resources:S.resources, moon:S.moon, season:S.season, seasonMoon:S.seasonMoon, year:S.year, xp:S.xp, arcIndex:S.arcIndex, rankIndex:S.rankIndex, totalScore:S.totalScore, cats:S.cats, structures:S.structures, exploredZones:S.exploredZones, seenEventIds:S.seenEventIds, breadcrumbIndex:S.breadcrumbIndex })); } catch(e){}
+}
+function load(){
+  try {
+    const raw=localStorage.getItem('scw_save');
+    if(!raw) return false;
+    const d=JSON.parse(raw);
+    Object.assign(S,d);
+    S.initialized=true;
+    return true;
+  } catch(e){ return false; }
+}
+
+// ── GAME LOOP ───────────────────────────────────────────────────────────────
+function gameLoop(){
+  drawMap();
+  if(expeditionAnim){ expeditionAnim.progress=Math.min(1,expeditionAnim.progress+0.015); }
+  requestAnimationFrame(gameLoop);
+}
+
+// ── BOOT ────────────────────────────────────────────────────────────────────
+resizeCanvas();
+window.addEventListener('resize',resizeCanvas);
+initOptionGroups();
+
+// Try to load saved game
+if(load()){
+  document.getElementById('cat-maker').classList.add('hidden');
+  updateHUD();
+  gameLoop();
+} else {
+  // Show cat maker
+  gameLoop();
+}
+</script>
+</body>
+</html>
