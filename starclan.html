@@ -786,41 +786,50 @@ function openZonePanel(idx){
 
 function renderCatList(){
   const list=document.getElementById('cat-list');
+  list.innerHTML='';
   const avail=S.cats.filter(c=>!c.onPatrol && c.role!=='kit');
   const sel=S.activeExpedition?.selectedCats||[];
   const roleLabel={ leader:'LDR', deputy:'DEP', medicine:'MED', warrior:'WAR', apprentice:'APP', elder:'ELD', kit:'KIT' };
   const roleColor={ leader:'#e8d48a', deputy:'#c0c8e0', medicine:'#6ab87a', warrior:'#8090c0', apprentice:'#a080c0', elder:'#8a9090' };
-  list.innerHTML=avail.map(c=>{
+
+  avail.forEach(c=>{
     const sid=String(c.id);
     const isSelected=sel.map(String).includes(sid);
     const rc=roleColor[c.role]||'#888';
     const rl=roleLabel[c.role]||'CAT';
-    return `<div class="cat-row cat-selectable" data-catid="${sid}">
-      <div class="cat-portrait" style="background:${isSelected?'rgba(232,212,138,0.2)':'var(--den)'};border-color:${isSelected?'#e8d48a':'rgba(255,255,255,0.15)'}">
-        <span style="font-size:10px;font-family:monospace;color:${rc};font-weight:bold;">${rl}</span>
-      </div>
-      <div class="cat-info">
-        <div class="cat-name">${c.name}</div>
-        <div class="cat-role" style="color:var(--pale);font-size:11px;font-family:monospace;">${c.role} · ${c.personality}</div>
-        <div class="cat-traits" style="font-size:10px;color:var(--herb);font-family:monospace;">${c.specialty} · Loyalty ${c.loyalty}</div>
-      </div>
-      <div style="font-size:22px;color:var(--star);width:28px;text-align:center;flex-shrink:0;">${isSelected?'✓':''}</div>
-    </div>`;
-  }).join('');
-}
 
-// Event delegation - no inline onclick, works on iOS Safari with type=module
-document.getElementById('cat-list').addEventListener('click', function(e){
-  const row=e.target.closest('.cat-selectable');
-  if(!row||!S.activeExpedition) return;
-  const sid=row.dataset.catid;
-  if(!sid) return;
-  const sel=S.activeExpedition.selectedCats;
-  const idx=sel.findIndex(s=>String(s)===sid);
-  if(idx>=0) sel.splice(idx,1);
-  else if(sel.length<4) sel.push(sid);
-  renderCatList();
-});
+    const btn=document.createElement('button');
+    btn.type='button';
+    btn.style.cssText='display:flex;align-items:center;gap:10px;width:100%;padding:10px 20px;background:none;border:none;border-bottom:1px solid rgba(255,255,255,0.05);cursor:pointer;text-align:left;-webkit-tap-highlight-color:transparent;touch-action:manipulation;';
+
+    const portrait=document.createElement('div');
+    portrait.style.cssText=`width:40px;height:40px;border-radius:50%;border:2px solid ${isSelected?'#e8d48a':'rgba(255,255,255,0.15)'};display:flex;align-items:center;justify-content:center;background:${isSelected?'rgba(232,212,138,0.2)':'var(--den)'};flex-shrink:0;`;
+    portrait.innerHTML=`<span style="font-size:10px;font-family:monospace;color:${rc};font-weight:bold;">${rl}</span>`;
+
+    const info=document.createElement('div');
+    info.style.cssText='flex:1;';
+    info.innerHTML=`<div style="font-size:14px;color:var(--moon);">${c.name}</div><div style="font-size:11px;color:var(--pale);font-family:monospace;">${c.role} · ${c.personality}</div><div style="font-size:10px;color:var(--herb);font-family:monospace;">${c.specialty} · Loyalty ${c.loyalty}</div>`;
+
+    const check=document.createElement('div');
+    check.style.cssText='font-size:22px;color:var(--star);width:28px;text-align:center;flex-shrink:0;';
+    check.textContent=isSelected?'✓':'';
+
+    btn.appendChild(portrait);
+    btn.appendChild(info);
+    btn.appendChild(check);
+
+    btn.addEventListener('click', function(){
+      if(!S.activeExpedition) return;
+      const sel=S.activeExpedition.selectedCats;
+      const idx=sel.findIndex(s=>String(s)===sid);
+      if(idx>=0) sel.splice(idx,1);
+      else if(sel.length<4) sel.push(sid);
+      renderCatList();
+    });
+
+    list.appendChild(btn);
+  });
+}
 
 
 // ── CAMP PANEL ─────────────────────────────────────────────────────────────
