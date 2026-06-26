@@ -513,7 +513,7 @@ function genName(role){
   return pre+rnd(CAT_NAMES.suffixes);
 }
 function genCat(role){
-  return { id:Date.now()+Math.random(), name:genName(role), role, coat:rnd(COAT_COLORS),
+  return { id:String(Date.now()+Math.random()), name:genName(role), role, coat:rnd(COAT_COLORS),
     marking:rnd(MARKINGS), eyes:rnd(EYES), personality:rnd(PERSONALITIES),
     specialty:rnd(SPECIALTIES), age:role==='apprentice'?8:18, loyalty:70+Math.floor(Math.random()*20),
     injured:false, sick:false };
@@ -521,7 +521,7 @@ function genCat(role){
 
 function initCats(){
   S.cats = [
-    { id:1, name:S.player.name, role:'leader', coat:S.player.coat, marking:S.player.marking,
+    { id:'1', name:S.player.name, role:'leader', coat:S.player.coat, marking:S.player.marking,
       eyes:S.player.eyes, personality:S.player.personality, specialty:'Hunt',
       age:24, loyalty:100, injured:false, sick:false },
     { ...genCat('warrior'), role:'deputy', name:genName('warrior') },
@@ -788,30 +788,40 @@ function renderCatList(){
   const list=document.getElementById('cat-list');
   const avail=S.cats.filter(c=>!c.onPatrol && c.role!=='kit');
   const sel=S.activeExpedition?.selectedCats||[];
+  const roleLabel={ leader:'LDR', deputy:'DEP', medicine:'MED', warrior:'WAR', apprentice:'APP', elder:'ELD', kit:'KIT' };
+  const roleColor={ leader:'#e8d48a', deputy:'#c0c8e0', medicine:'#6ab87a', warrior:'#8090c0', apprentice:'#a080c0', elder:'#8a9090' };
   list.innerHTML=avail.map(c=>{
     const sid=String(c.id);
     const isSelected=sel.map(String).includes(sid);
-    return `<div class="cat-row" data-id="${sid}" onclick="toggleCat('${sid}')">
-      <div class="cat-portrait ${isSelected?'selected':''}">${ROLE_EMOJI[c.role]||'🐾'}</div>
+    const rc=roleColor[c.role]||'#888';
+    const rl=roleLabel[c.role]||'CAT';
+    return `<div class="cat-row cat-selectable" data-catid="${sid}">
+      <div class="cat-portrait" style="background:${isSelected?'rgba(232,212,138,0.2)':'var(--den)'};border-color:${isSelected?'#e8d48a':'rgba(255,255,255,0.15)'}">
+        <span style="font-size:10px;font-family:monospace;color:${rc};font-weight:bold;">${rl}</span>
+      </div>
       <div class="cat-info">
         <div class="cat-name">${c.name}</div>
-        <div class="cat-role">${c.role} · ${c.personality}</div>
-        <div class="cat-traits">${c.specialty} · Loyalty ${c.loyalty}</div>
+        <div class="cat-role" style="color:var(--pale);font-size:11px;font-family:monospace;">${c.role} · ${c.personality}</div>
+        <div class="cat-traits" style="font-size:10px;color:var(--herb);font-family:monospace;">${c.specialty} · Loyalty ${c.loyalty}</div>
       </div>
-      <div class="cat-check">${isSelected?'✓':''}</div>
+      <div style="font-size:22px;color:var(--star);width:28px;text-align:center;flex-shrink:0;">${isSelected?'✓':''}</div>
     </div>`;
   }).join('');
 }
 
-window.toggleCat=function(id){
-  if(!S.activeExpedition) return;
+// Event delegation - no inline onclick, works on iOS Safari with type=module
+document.getElementById('cat-list').addEventListener('click', function(e){
+  const row=e.target.closest('.cat-selectable');
+  if(!row||!S.activeExpedition) return;
+  const sid=row.dataset.catid;
+  if(!sid) return;
   const sel=S.activeExpedition.selectedCats;
-  const strId=String(id);
-  const idx=sel.findIndex(s=>String(s)===strId);
+  const idx=sel.findIndex(s=>String(s)===sid);
   if(idx>=0) sel.splice(idx,1);
-  else if(sel.length<4) sel.push(strId);
+  else if(sel.length<4) sel.push(sid);
   renderCatList();
-};
+});
+
 
 // ── CAMP PANEL ─────────────────────────────────────────────────────────────
 function openCampPanel(){
@@ -841,8 +851,8 @@ function openCampPanel(){
         <div class="structure-level">Level ${level}/${meta.maxLevel}</div>
       </div>
       ${atMax?'<span style="font-size:11px;color:var(--star)">MAX</span>':
-        `<button class="upgrade-btn" ${canUpgrade?'':'disabled'} onclick="upgradeStructure('${key}')">
-          Upgrade<br><span style="font-size:10px">🍖${cost.prey} 🌿${cost.herbs}</span>
+        `<button class="upgrade-btn upgrade-btn-action" data-structkey="${key}" ${canUpgrade?'':'disabled'}>
+          Upgrade<br><span style="font-size:10px">${cost.prey?'🍖'+cost.prey:''} ${cost.herbs?'🌿'+cost.herbs:''}</span>
         </button>`}
     </div>`;
   }).join('');
@@ -866,9 +876,20 @@ window.upgradeStructure=function(key){
   save();
 };
 
-// ── PANEL HELPERS ──────────────────────────────────────────────────────────
+// Event delegation for structure upgrades
+document.getElementById('structure-list').addEventListener('click', function(e){
+  const btn=e.target.closest('.upgrade-btn-action');
+  if(!btn||btn.disabled) return;
+  window.upgradeStructure(btn.dataset.structkey);
+});
+
+
 function openPanel(id){
-  closeAllPanels();
+  // Close other panels but preserve activeExpedition if opening zone panel
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('open'));
+  document.getElementById('dimmer').classList.remove('on');
+  selectedCell = id==='zone-panel' ? selectedCell : -1;
+  if(id!=='zone-panel') S.activeExpedition=null;
   document.getElementById(id).classList.add('open');
   document.getElementById('dimmer').classList.add('on');
 }
@@ -1159,40 +1180,51 @@ function showEvent(ev){
   document.getElementById('ev-text').textContent=ev.text;
 
   const choicesEl=document.getElementById('ev-choices');
+  choicesEl.innerHTML='';
+
   if(ev.hasChoice && ev.choices.length>0){
-    choicesEl.innerHTML=ev.choices.map((c,i)=>`
-      <button class="choice-btn" onclick="chooseEvent(${i})">
-        <span class="choice-label">${c.label}</span>
-        <span class="choice-effect">${c.effect_description}</span>
-      </button>`).join('');
+    ev.choices.forEach((c,i)=>{
+      const btn=document.createElement('button');
+      btn.className='choice-btn';
+      btn.dataset.choiceIdx=String(i);
+      const label=document.createElement('span');
+      label.className='choice-label'; label.textContent=c.label;
+      const effect=document.createElement('span');
+      effect.className='choice-effect'; effect.textContent=c.effect_description;
+      btn.appendChild(label); btn.appendChild(effect);
+      choicesEl.appendChild(btn);
+    });
   } else {
-    choicesEl.innerHTML=`<button class="continue-btn" onclick="chooseEvent(-1)">Continue →</button>`;
+    const btn=document.createElement('button');
+    btn.className='continue-btn'; btn.dataset.choiceIdx='-1'; btn.textContent='Continue →';
+    choicesEl.appendChild(btn);
   }
 }
 
-window.chooseEvent=function(idx){
+// Event delegation for event choices - no inline onclick
+document.getElementById('ev-choices').addEventListener('click', function(e){
+  const btn=e.target.closest('[data-choice-idx]');
+  if(!btn) return;
+  const idx=parseInt(btn.dataset.choiceIdx);
   document.getElementById('event-screen').classList.add('hidden');
   const ev=S.pendingEvent;
   S.pendingEvent=null;
-
   if(idx>=0 && ev && ev.choices[idx]){
     const effects=[
       { prey:5, territory:5, herbs:-2, morale:5 },
       { prey:3, territory:2, herbs:5,  morale:3 },
       { prey:2, territory:-2, herbs:8, morale:8 }
     ];
-    const e=effects[idx%3];
-    S.resources.prey=Math.min(getMaxPrey(),Math.max(0,S.resources.prey+e.prey));
-    S.resources.herbs=Math.min(100,Math.max(0,S.resources.herbs+e.herbs));
-    S.resources.territory=Math.min(100,Math.max(0,S.resources.territory+e.territory));
-    S.resources.morale=Math.min(100,Math.max(0,S.resources.morale+e.morale));
+    const e2=effects[idx%3];
+    S.resources.prey=Math.min(getMaxPrey(),Math.max(0,S.resources.prey+e2.prey));
+    S.resources.herbs=Math.min(100,Math.max(0,S.resources.herbs+e2.herbs));
+    S.resources.territory=Math.min(100,Math.max(0,S.resources.territory+e2.territory));
+    S.resources.morale=Math.min(100,Math.max(0,S.resources.morale+e2.morale));
   }
-
   updateHUD();
-  // Use stored outcome from finishMath
   const last=S._lastOutcome||{ outcome:null, correctCount:0, score:S.moonScore };
   showResolution(last.outcome, last.correctCount, last.score);
-};
+});
 
 // ── RESOLUTION ─────────────────────────────────────────────────────────────
 function showResolution(outcome, correct, score, fromEvent=false){
