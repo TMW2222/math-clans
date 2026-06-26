@@ -88,8 +88,8 @@ canvas{display:block;touch-action:none;}
 #math-overlay{position:fixed;inset:0;background:rgba(10,14,20,0.88);z-index:200;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding-top:calc(var(--safe-top) + 20px);}
 #math-overlay.hidden{display:none;}
 .math-zone-info{font-size:11px;font-family:monospace;color:var(--pale);letter-spacing:.08em;text-transform:uppercase;margin-bottom:8px;}
-.math-progress{display:flex;gap:8px;margin-bottom:20px;}
-.math-dot{width:12px;height:12px;border-radius:50%;background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.25);}
+.math-progress{display:flex;gap:6px;margin-bottom:20px;flex-wrap:wrap;justify-content:center;}
+.math-dot{width:10px;height:10px;border-radius:50%;background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.25);}
 .math-dot.correct{background:var(--herb);border-color:var(--herb);}
 .math-dot.wrong{background:var(--blood);border-color:var(--blood);}
 .math-dot.current{border-color:var(--star);}
@@ -193,11 +193,19 @@ canvas{display:block;touch-action:none;}
 #tutorial-tip{position:fixed;bottom:calc(var(--safe-bot) + 70px);left:50%;transform:translateX(-50%);background:rgba(30,39,54,.95);border:1px solid rgba(232,212,138,.3);border-radius:12px;padding:10px 16px;font-size:13px;color:var(--moon);text-align:center;z-index:60;pointer-events:none;max-width:280px;transition:opacity .3s;}
 #tutorial-tip.hidden{opacity:0;}
 
-/* Rank tracker */
-#rank-tracker{position:fixed;bottom:calc(var(--safe-bot) + 58px);left:12px;right:12px;z-index:50;pointer-events:none;background:rgba(13,17,23,0.75);border:1px solid rgba(232,212,138,0.2);border-radius:10px;padding:7px 12px;}
-#rank-stars{font-size:11px;letter-spacing:3px;color:var(--star);opacity:.7;margin-bottom:1px;}
-#rank-name-display{font-size:13px;color:var(--star);font-family:'Georgia',serif;letter-spacing:.03em;}
-#rank-bar-wrap{height:4px;background:rgba(255,255,255,0.1);border-radius:2px;margin:4px 0 2px;}
+/* Rank tracker - full journey */
+#rank-tracker{position:fixed;bottom:calc(var(--safe-bot) + 58px);left:12px;right:12px;z-index:50;pointer-events:none;background:rgba(13,17,23,0.82);border:1px solid rgba(232,212,138,0.2);border-radius:10px;padding:8px 12px;}
+#rank-journey{display:flex;align-items:center;gap:0;margin-bottom:6px;overflow:hidden;}
+.rj-node{display:flex;flex-direction:column;align-items:center;flex:1;min-width:0;}
+.rj-dot{width:10px;height:10px;border-radius:50%;background:rgba(255,255,255,0.12);border:1.5px solid rgba(255,255,255,0.2);flex-shrink:0;transition:all .3s;}
+.rj-dot.done{background:var(--star);border-color:var(--star);}
+.rj-dot.current{background:var(--ember);border-color:var(--ember);box-shadow:0 0 6px rgba(232,145,74,0.6);}
+.rj-label{font-size:8px;font-family:monospace;color:rgba(255,255,255,0.25);text-align:center;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;letter-spacing:.02em;}
+.rj-label.done{color:var(--star);}
+.rj-label.current{color:var(--ember);}
+.rj-line{height:1.5px;flex:1;background:rgba(255,255,255,0.1);margin:0;}
+.rj-line.done{background:var(--star);}
+#rank-bar-wrap{height:3px;background:rgba(255,255,255,0.1);border-radius:2px;margin:0 0 3px;}
 #rank-bar-fill{height:100%;border-radius:2px;background:linear-gradient(90deg,var(--star),var(--ember));transition:width .5s ease;}
 #rank-bar-label{font-size:10px;color:var(--pale);font-family:monospace;}
 
@@ -266,14 +274,11 @@ canvas{display:block;touch-action:none;}
 <!-- Main canvas -->
 <canvas id="game-canvas"></canvas>
 
-<!-- Rank tracker -->
+<!-- Rank tracker - full journey -->
 <div id="rank-tracker">
-  <div id="rank-stars"></div>
-  <div id="rank-name-display">Spark Kit</div>
-  <div id="rank-bar-wrap">
-    <div id="rank-bar-fill"></div>
-  </div>
-  <div id="rank-bar-label">0 / 150 xp to next rank</div>
+  <div id="rank-journey"></div>
+  <div id="rank-bar-wrap"><div id="rank-bar-fill"></div></div>
+  <div id="rank-bar-label">0 xp · 120 to next rank</div>
 </div>
 
 <!-- Bottom bar -->
@@ -951,17 +956,40 @@ function updateHUD(){
 
   // XP bar
   const arc=STORY_ARCS[S.arcIndex];
-  const rank=arc?arc.ranks[S.rankIndex]:null;
-  const rankName=rank?rank.rank_name:'Legend';
-  const xpBase=getRankThreshold(S.rankIndex);
-  const xpNeeded=getRankThreshold(S.rankIndex+1)||xpBase+200;
+  const ranks=arc?arc.ranks:[];
+  const currentRankIdx=S.rankIndex;
+  const xpBase=getRankThreshold(currentRankIdx);
+  const xpNeeded=getRankThreshold(currentRankIdx+1)||xpBase+200;
   const pct=Math.max(0,Math.min(100,(S.xp-xpBase)/(xpNeeded-xpBase)*100));
-  const starsEarned=S.rankIndex;
-  document.getElementById('rank-stars').textContent='★'.repeat(starsEarned)+'☆'.repeat(Math.max(0,5-starsEarned));
-  document.getElementById('rank-name-display').textContent=rankName;
+
+  // Build journey nodes
+  const journey=document.getElementById('rank-journey');
+  journey.innerHTML='';
+  ranks.forEach((r,i)=>{
+    // Line before node (except first)
+    if(i>0){
+      const line=document.createElement('div');
+      line.className='rj-line'+(i<=currentRankIdx?' done':'');
+      journey.appendChild(line);
+    }
+    const node=document.createElement('div');
+    node.className='rj-node';
+    const dot=document.createElement('div');
+    dot.className='rj-dot'+(i<currentRankIdx?' done':i===currentRankIdx?' current':'');
+    const label=document.createElement('div');
+    // Shorten rank names to fit
+    const shortName=r.rank_name.split(' ')[0];
+    label.className='rj-label'+(i<currentRankIdx?' done':i===currentRankIdx?' current':'');
+    label.textContent=shortName;
+    node.appendChild(dot);
+    node.appendChild(label);
+    journey.appendChild(node);
+  });
+
   document.getElementById('rank-bar-fill').style.width=pct+'%';
   const xpLeft=Math.max(0,xpNeeded-S.xp);
-  document.getElementById('rank-bar-label').textContent=S.rankIndex>=5?'Final rank achieved ✦':`${S.xp} xp · ${xpLeft} to next rank`;
+  const curRankName=ranks[currentRankIdx]?.rank_name||'Legend';
+  document.getElementById('rank-bar-label').textContent=currentRankIdx>=ranks.length-1?`${curRankName} ✦`:`${curRankName} · ${xpLeft} xp to next`;
 }
 
 // ── ZONE PANEL ─────────────────────────────────────────────────────────────
@@ -1145,7 +1173,7 @@ function startMath(exp){
   const zone=getZone(exp.zoneId);
   S.mathSession={
     exp, zone,
-    problems: Array.from({length:5},()=>generateProblem()),
+    problems: Array.from({length:10},()=>generateProblem()),
     current: 0,
     results: [],  // true/false
     timings: [],
@@ -1206,7 +1234,7 @@ function submitMathAnswer(timeout=false){
   if(correct){
     const bonus=fast?Math.floor((MATH_TIME-timeUsed)*0.9):0;
     ms.score+=15+bonus;
-    S.xp+=20;
+    S.xp+=8;
     floatNumber('+'.concat(15+bonus), true);
     document.getElementById('math-hint').textContent=fast?`Fast! +${bonus} bonus`:'Correct!';
   } else {
@@ -1534,6 +1562,7 @@ let introPage=1;
 
 function showIntroPage(n){
   introPage=n;
+  document.getElementById('intro-screen').classList.remove('hidden');
   document.getElementById('intro-s1').classList.toggle('hidden', n!==1);
   document.getElementById('intro-s2').classList.toggle('hidden', n!==2);
   document.getElementById('intro-s3').classList.toggle('hidden', n!==3);
@@ -1556,7 +1585,7 @@ document.getElementById('intro-skip-btn').addEventListener('click',()=>{
 // ── XP / RANK THRESHOLDS ───────────────────────────────────────────────────
 // Tuned for 85% math accuracy over 12 moons (~850 XP total)
 // 65% player reaches rank 4-5, 85% player can reach rank 6
-const XP_THRESHOLDS = [0, 100, 220, 380, 540, 700, 850];
+const XP_THRESHOLDS = [0, 120, 260, 420, 580, 740, 900];
 
 function getRankThreshold(rankIdx){ return XP_THRESHOLDS[Math.min(rankIdx, XP_THRESHOLDS.length-1)] || rankIdx*200; }
 
@@ -1860,18 +1889,18 @@ function gameLoop(){
 // ── BOOT ────────────────────────────────────────────────────────────────────
 resizeCanvas();
 window.addEventListener('resize',resizeCanvas);
-initOptionGroups();
+try { initOptionGroups(); } catch(e){ console.warn('initOptionGroups error:', e); }
+gameLoop(); // always start rendering
 
-// Try to load saved game
 if(load()){
+  // Returning player - skip world intro, show arc intro
   document.getElementById('intro-screen').classList.add('hidden');
   document.getElementById('cat-maker').classList.add('hidden');
-  updateHUD();
-  gameLoop();
+  showArcIntro();
 } else {
-  // First launch — show intro
+  // New player - show world intro, hide cat maker
+  document.getElementById('cat-maker').classList.add('hidden');
   showIntroPage(1);
-  gameLoop();
 }
 </script>
 </body>
