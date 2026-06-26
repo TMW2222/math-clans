@@ -193,6 +193,40 @@ canvas{display:block;touch-action:none;}
 #tutorial-tip{position:fixed;bottom:calc(var(--safe-bot) + 70px);left:50%;transform:translateX(-50%);background:rgba(30,39,54,.95);border:1px solid rgba(232,212,138,.3);border-radius:12px;padding:10px 16px;font-size:13px;color:var(--moon);text-align:center;z-index:60;pointer-events:none;max-width:280px;transition:opacity .3s;}
 #tutorial-tip.hidden{opacity:0;}
 
+/* Rank tracker */
+#rank-tracker{position:fixed;bottom:calc(var(--safe-bot) + 58px);left:12px;right:12px;z-index:50;pointer-events:none;background:rgba(13,17,23,0.75);border:1px solid rgba(232,212,138,0.2);border-radius:10px;padding:7px 12px;}
+#rank-stars{font-size:11px;letter-spacing:3px;color:var(--star);opacity:.7;margin-bottom:1px;}
+#rank-name-display{font-size:13px;color:var(--star);font-family:'Georgia',serif;letter-spacing:.03em;}
+#rank-bar-wrap{height:4px;background:rgba(255,255,255,0.1);border-radius:2px;margin:4px 0 2px;}
+#rank-bar-fill{height:100%;border-radius:2px;background:linear-gradient(90deg,var(--star),var(--ember));transition:width .5s ease;}
+#rank-bar-label{font-size:10px;color:var(--pale);font-family:monospace;}
+
+/* Intro screens */
+#intro-screen{position:fixed;inset:0;background:var(--night);z-index:600;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding:calc(var(--safe-top) + 20px) 28px calc(var(--safe-bot) + 20px);}
+#intro-screen.hidden{display:none;}
+.intro-skip{position:absolute;top:calc(var(--safe-top) + 16px);right:20px;font-size:12px;font-family:monospace;color:var(--pale);background:rgba(255,255,255,0.08);border:none;border-radius:8px;padding:6px 12px;cursor:pointer;letter-spacing:.06em;}
+.intro-art{width:100%;max-width:340px;margin:0 auto 24px;}
+.intro-dots{display:flex;gap:8px;margin-bottom:28px;}
+.intro-dot{width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,0.2);}
+.intro-dot.active{background:var(--star);}
+.intro-heading{font-size:26px;color:var(--star);text-align:center;margin-bottom:16px;line-height:1.2;}
+.intro-body{font-size:15px;color:var(--moon);line-height:1.75;text-align:center;max-width:360px;margin-bottom:auto;}
+.intro-body strong{color:var(--star);}
+.intro-next{margin-top:32px;width:100%;max-width:360px;height:52px;background:linear-gradient(135deg,var(--ember),#c06830);border:none;border-radius:14px;color:#fff;font-size:16px;font-family:'Georgia',serif;cursor:pointer;letter-spacing:.04em;}
+
+/* Arc intro / personalized story */
+#arc-intro{position:fixed;inset:0;background:linear-gradient(180deg,#050810 0%,var(--night) 60%,var(--deep) 100%);z-index:600;display:flex;flex-direction:column;align-items:center;padding:calc(var(--safe-top) + 30px) 24px calc(var(--safe-bot) + 24px);overflow-y:auto;}
+#arc-intro.hidden{display:none;}
+.arc-intro-stars{font-size:24px;letter-spacing:8px;margin-bottom:20px;opacity:.7;}
+.arc-intro-clan{font-size:11px;font-family:monospace;letter-spacing:.2em;text-transform:uppercase;color:var(--star);margin-bottom:8px;}
+.arc-intro-title{font-size:24px;color:var(--moon);text-align:center;margin-bottom:24px;line-height:1.25;}
+.arc-intro-divider{width:60px;height:1px;background:linear-gradient(90deg,transparent,var(--star),transparent);margin:0 auto 24px;}
+.arc-intro-text{font-size:15px;color:var(--moon);line-height:1.75;max-width:500px;margin-bottom:20px;}
+.arc-intro-mission{background:rgba(232,212,138,0.07);border:1px solid rgba(232,212,138,0.25);border-radius:12px;padding:16px 18px;max-width:500px;width:100%;margin-bottom:28px;}
+.arc-intro-mission-label{font-size:10px;font-family:monospace;letter-spacing:.12em;text-transform:uppercase;color:var(--star);margin-bottom:8px;}
+.arc-intro-mission-text{font-size:14px;color:var(--moon);line-height:1.6;}
+.arc-intro-begin{background:linear-gradient(135deg,var(--ember),#c06830);border:none;border-radius:14px;padding:16px 40px;color:#fff;font-size:17px;font-family:'Georgia',serif;cursor:pointer;letter-spacing:.04em;}
+
 /* Overlay dimmer for panels */
 #dimmer{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:90;opacity:0;pointer-events:none;transition:opacity .3s;}
 #dimmer.on{opacity:1;pointer-events:all;}
@@ -232,10 +266,14 @@ canvas{display:block;touch-action:none;}
 <!-- Main canvas -->
 <canvas id="game-canvas"></canvas>
 
-<!-- XP bar -->
-<div id="xp-bar-wrap">
-  <div id="xp-label">Spark Kit · 0 / 150 xp</div>
-  <div id="xp-track"><div id="xp-fill" style="width:0%"></div></div>
+<!-- Rank tracker -->
+<div id="rank-tracker">
+  <div id="rank-stars"></div>
+  <div id="rank-name-display">Spark Kit</div>
+  <div id="rank-bar-wrap">
+    <div id="rank-bar-fill"></div>
+  </div>
+  <div id="rank-bar-label">0 / 150 xp to next rank</div>
 </div>
 
 <!-- Bottom bar -->
@@ -346,8 +384,167 @@ canvas{display:block;touch-action:none;}
   <button class="cin-continue" id="cin-continue">Return to Camp →</button>
 </div>
 
+<!-- Intro Screens -->
+<div id="intro-screen">
+  <button class="intro-skip" id="intro-skip-btn">Skip ›</button>
+  <div class="intro-dots" id="intro-dots">
+    <div class="intro-dot active"></div>
+    <div class="intro-dot"></div>
+    <div class="intro-dot"></div>
+  </div>
+
+  <!-- Screen 1 -->
+  <div id="intro-s1">
+    <svg class="intro-art" viewBox="0 0 340 160" xmlns="http://www.w3.org/2000/svg">
+      <!-- Night sky -->
+      <rect width="340" height="160" fill="#070b12"/>
+      <!-- Stars -->
+      <circle cx="30" cy="20" r="1.2" fill="#e8d48a" opacity=".9"/>
+      <circle cx="80" cy="12" r="0.8" fill="#fff" opacity=".7"/>
+      <circle cx="140" cy="25" r="1.4" fill="#e8d48a" opacity=".8"/>
+      <circle cx="200" cy="10" r="1" fill="#fff" opacity=".6"/>
+      <circle cx="260" cy="18" r="1.2" fill="#e8d48a" opacity=".9"/>
+      <circle cx="310" cy="30" r="0.9" fill="#fff" opacity=".7"/>
+      <circle cx="55" cy="40" r="0.7" fill="#fff" opacity=".5"/>
+      <circle cx="170" cy="8" r="0.8" fill="#e8d48a" opacity=".6"/>
+      <circle cx="230" cy="35" r="1" fill="#fff" opacity=".8"/>
+      <circle cx="290" cy="15" r="0.7" fill="#e8d48a" opacity=".7"/>
+      <!-- Moon -->
+      <circle cx="170" cy="55" r="32" fill="#1a2440"/>
+      <circle cx="170" cy="55" r="30" fill="#c9d6e8" opacity=".15"/>
+      <circle cx="170" cy="55" r="28" fill="none" stroke="#e8d48a" stroke-width="1.5" opacity=".6"/>
+      <!-- Moon face suggestion -->
+      <circle cx="170" cy="55" r="24" fill="#0d1117" opacity=".4"/>
+      <text x="170" y="62" text-anchor="middle" font-size="28" fill="#e8d48a" opacity=".7">✦</text>
+      <!-- Forest silhouette -->
+      <path d="M0,130 L20,90 L35,110 L55,70 L70,95 L90,60 L105,85 L125,50 L140,75 L160,45 L175,70 L195,40 L210,68 L230,55 L245,80 L265,48 L280,72 L300,58 L315,82 L340,65 L340,160 L0,160 Z" fill="#0d1117"/>
+      <path d="M0,140 L25,115 L45,125 L70,105 L90,118 L115,100 L135,112 L160,95 L180,108 L205,92 L225,106 L250,88 L270,102 L295,90 L315,104 L340,92 L340,160 L0,160 Z" fill="#0a0e14"/>
+      <!-- Cat silhouettes on hill -->
+      <ellipse cx="155" cy="137" rx="12" ry="6" fill="#1a1814"/>
+      <circle cx="155" cy="130" r="5" fill="#1a1814"/>
+      <path d="M151,126 L148,120 L153,124" fill="#1a1814"/>
+      <path d="M159,126 L162,120 L157,124" fill="#1a1814"/>
+      <ellipse cx="185" cy="133" rx="14" ry="7" fill="#1a1814"/>
+      <circle cx="185" cy="126" r="6" fill="#1a1814"/>
+      <path d="M180,122 L177,115 L183,120" fill="#1a1814"/>
+      <path d="M190,122 L193,115 L187,120" fill="#1a1814"/>
+      <!-- Tail -->
+      <path d="M167,137 Q175,125 170,118" stroke="#1a1814" stroke-width="2.5" fill="none"/>
+    </svg>
+    <h2 class="intro-heading">StarClan's Watch</h2>
+    <p class="intro-body">Long before you were born, the warrior cats made a sacred promise: to protect their Clan, honor the warrior code, and listen to the ancestors who watch from the stars.<br><br>Those ancestors are called <strong>StarClan</strong>. And tonight, they are watching you.</p>
+    <button class="intro-next" id="intro-next-1">Next →</button>
+  </div>
+
+  <!-- Screen 2 -->
+  <div id="intro-s2" class="hidden">
+    <svg class="intro-art" viewBox="0 0 340 160" xmlns="http://www.w3.org/2000/svg">
+      <rect width="340" height="160" fill="#0a1218"/>
+      <!-- Forest path -->
+      <path d="M120,160 Q170,80 220,160" fill="#1a2820" opacity=".6"/>
+      <!-- Trees -->
+      <rect x="40" y="60" width="8" height="100" fill="#1a2010"/>
+      <polygon points="44,20 20,75 68,75" fill="#243018"/>
+      <polygon points="44,35 22,80 66,80" fill="#2c3a20"/>
+      <rect x="280" y="50" width="10" height="110" fill="#1a2010"/>
+      <polygon points="285,15 258,72 312,72" fill="#243018"/>
+      <polygon points="285,30 260,78 310,78" fill="#2c3a20"/>
+      <rect x="90" y="80" width="7" height="80" fill="#1a2010"/>
+      <polygon points="93,48 74,88 112,88" fill="#243018"/>
+      <rect x="230" y="70" width="8" height="90" fill="#1a2010"/>
+      <polygon points="234,40 214,82 254,82" fill="#243018"/>
+      <!-- Patrol cats walking -->
+      <g transform="translate(130,115)">
+        <ellipse cx="0" cy="0" rx="10" ry="5" fill="#c8672a"/>
+        <circle cx="0" cy="-7" r="5" fill="#c8672a"/>
+        <path d="M-3,-11 L-5,-16 L-1,-12" fill="#c8672a"/>
+        <path d="M3,-11 L5,-16 L1,-12" fill="#c8672a"/>
+        <path d="M8,0 Q14,-8 12,-14" stroke="#c8672a" stroke-width="2" fill="none"/>
+      </g>
+      <g transform="translate(160,120)">
+        <ellipse cx="0" cy="0" rx="9" ry="4" fill="#6a7080"/>
+        <circle cx="0" cy="-6" r="4" fill="#6a7080"/>
+        <path d="M-3,-9 L-5,-14 L-1,-10" fill="#6a7080"/>
+        <path d="M3,-9 L5,-14 L1,-10" fill="#6a7080"/>
+        <path d="M7,0 Q12,-7 10,-13" stroke="#6a7080" stroke-width="2" fill="none"/>
+      </g>
+      <g transform="translate(190,118)">
+        <ellipse cx="0" cy="0" rx="10" ry="5" fill="#7a5030"/>
+        <circle cx="0" cy="-7" r="5" fill="#7a5030"/>
+        <path d="M-3,-11 L-5,-16 L-1,-12" fill="#7a5030"/>
+        <path d="M3,-11 L5,-16 L1,-12" fill="#7a5030"/>
+        <path d="M8,0 Q14,-8 12,-14" stroke="#7a5030" stroke-width="2" fill="none"/>
+      </g>
+      <!-- Stars above -->
+      <circle cx="50" cy="25" r="1" fill="#e8d48a" opacity=".8"/>
+      <circle cx="150" cy="15" r="1.2" fill="#e8d48a" opacity=".9"/>
+      <circle cx="250" cy="22" r="1" fill="#e8d48a" opacity=".7"/>
+      <circle cx="300" cy="12" r="0.8" fill="#fff" opacity=".6"/>
+    </svg>
+    <h2 class="intro-heading">Lead Your Clan</h2>
+    <p class="intro-body">You are the leader. Your Clan depends on you to survive every season.<br><br><strong>Send patrols</strong> into the territory to hunt for prey, gather herbs, and defend your borders. Each patrol faces a challenge — and how sharp your mind is determines how well they do.<br><br>Answer math quickly and correctly. The faster and more accurate you are, the more your Clan brings home.</p>
+    <button class="intro-next" id="intro-next-2">Next →</button>
+  </div>
+
+  <!-- Screen 3 -->
+  <div id="intro-s3" class="hidden">
+    <svg class="intro-art" viewBox="0 0 340 160" xmlns="http://www.w3.org/2000/svg">
+      <rect width="340" height="160" fill="#0d1117"/>
+      <!-- Resource icons -->
+      <!-- Prey pile -->
+      <g transform="translate(50,80)">
+        <ellipse cx="0" cy="10" rx="22" ry="8" fill="#3a2010" opacity=".8"/>
+        <ellipse cx="-8" cy="4" rx="9" ry="5" fill="#8b6040"/>
+        <ellipse cx="6" cy="2" rx="10" ry="6" fill="#a07050"/>
+        <ellipse cx="-2" cy="-2" rx="8" ry="5" fill="#906040"/>
+        <text x="0" y="30" text-anchor="middle" font-size="10" fill="#e8d48a" font-family="monospace" opacity=".8">PREY</text>
+      </g>
+      <!-- Herb bundle -->
+      <g transform="translate(130,80)">
+        <rect x="-4" y="-5" width="8" height="20" rx="2" fill="#3a5020" opacity=".6"/>
+        <ellipse cx="-10" cy="-8" rx="8" ry="5" fill="#4a7030" transform="rotate(-30,-10,-8)"/>
+        <ellipse cx="10" cy="-8" rx="8" ry="5" fill="#5a8040" transform="rotate(30,10,-8)"/>
+        <ellipse cx="0" cy="-12" rx="9" ry="5" fill="#6ab87a"/>
+        <text x="0" y="22" text-anchor="middle" font-size="10" fill="#6ab87a" font-family="monospace" opacity=".8">HERBS</text>
+      </g>
+      <!-- Territory marker -->
+      <g transform="translate(210,75)">
+        <polygon points="0,-20 6,-8 20,-8 10,0 14,14 0,6 -14,14 -10,0 -20,-8 -6,-8" fill="#4060a0" opacity=".7"/>
+        <polygon points="0,-14 4,-6 14,-6 7,0 10,10 0,4 -10,10 -7,0 -14,-6 -4,-6" fill="#6888d0" opacity=".5"/>
+        <text x="0" y="28" text-anchor="middle" font-size="10" fill="#6888d0" font-family="monospace" opacity=".8">TERRITORY</text>
+      </g>
+      <!-- Morale heart -->
+      <g transform="translate(290,78)">
+        <path d="M0,12 C-15,-2 -20,-15 -8,-18 C-2,-20 0,-14 0,-14 C0,-14 2,-20 8,-18 C20,-15 15,-2 0,12 Z" fill="#8040a0" opacity=".7"/>
+        <path d="M0,8 C-10,-1 -13,-10 -5,-12 C-1,-13 0,-9 0,-9 C0,-9 1,-13 5,-12 C13,-10 10,-1 0,8 Z" fill="#c080e0" opacity=".5"/>
+        <text x="0" y="28" text-anchor="middle" font-size="10" fill="#c080e0" font-family="monospace" opacity=".8">MORALE</text>
+      </g>
+      <!-- Season arc -->
+      <path d="M40,145 Q170,115 300,145" stroke="#e8d48a" stroke-width="1" fill="none" opacity=".3" stroke-dasharray="4,4"/>
+      <text x="170" y="158" text-anchor="middle" font-size="9" fill="#e8d48a" font-family="monospace" opacity=".5">12 MOONS · ONE SEASON</text>
+    </svg>
+    <h2 class="intro-heading">Survive the Season</h2>
+    <p class="intro-body">Watch four things: <strong>Prey</strong> feeds your Clan each moon. <strong>Herbs</strong> heal the sick and injured. <strong>Territory</strong> unlocks new zones to explore. <strong>Morale</strong> keeps your warriors loyal and strong.<br><br>A full season lasts <strong>12 moons</strong>. Prepare well for Leaf-bare — when prey is scarce and danger grows. Earn enough experience and StarClan will grant you a warrior name.</p>
+    <button class="intro-next" id="intro-next-3">Create Your Warrior ✦</button>
+  </div>
+</div>
+
+<!-- Arc Intro (personalized, shown after cat maker) -->
+<div id="arc-intro" class="hidden">
+  <div class="arc-intro-stars">✦ ✦ ✦ ✦ ✦</div>
+  <div class="arc-intro-clan" id="arc-intro-clan"></div>
+  <div class="arc-intro-title" id="arc-intro-title"></div>
+  <div class="arc-intro-divider"></div>
+  <div class="arc-intro-text" id="arc-intro-text"></div>
+  <div class="arc-intro-mission">
+    <div class="arc-intro-mission-label">⚑ Your Mission</div>
+    <div class="arc-intro-mission-text" id="arc-intro-mission"></div>
+  </div>
+  <button class="arc-intro-begin" id="arc-intro-begin">Enter the Territory →</button>
+</div>
+
 <!-- Cat Maker -->
-<div id="cat-maker">
+<div id="cat-maker" class="hidden">
   <div class="maker-title">✦ StarClan's Watch ✦</div>
   <div class="maker-sub">Create your warrior</div>
   <div class="maker-canvas-wrap"><canvas id="maker-canvas" width="120" height="120"></canvas></div>
@@ -757,10 +954,14 @@ function updateHUD(){
   const rank=arc?arc.ranks[S.rankIndex]:null;
   const rankName=rank?rank.rank_name:'Legend';
   const xpBase=getRankThreshold(S.rankIndex);
-  const xpNeeded=getRankThreshold(S.rankIndex+1)||xpBase+300;
-  const pct=((S.xp-xpBase)/(xpNeeded-xpBase)*100);
-  document.getElementById('xp-label').textContent=`${rankName} · ${S.xp} / ${xpNeeded} xp`;
-  document.getElementById('xp-fill').style.width=Math.max(0,Math.min(100,pct))+'%';
+  const xpNeeded=getRankThreshold(S.rankIndex+1)||xpBase+200;
+  const pct=Math.max(0,Math.min(100,(S.xp-xpBase)/(xpNeeded-xpBase)*100));
+  const starsEarned=S.rankIndex;
+  document.getElementById('rank-stars').textContent='★'.repeat(starsEarned)+'☆'.repeat(Math.max(0,5-starsEarned));
+  document.getElementById('rank-name-display').textContent=rankName;
+  document.getElementById('rank-bar-fill').style.width=pct+'%';
+  const xpLeft=Math.max(0,xpNeeded-S.xp);
+  document.getElementById('rank-bar-label').textContent=S.rankIndex>=5?'Final rank achieved ✦':`${S.xp} xp · ${xpLeft} to next rank`;
 }
 
 // ── ZONE PANEL ─────────────────────────────────────────────────────────────
@@ -1328,12 +1529,36 @@ function endMoon(){
   save();
 }
 
-// ── RANK UP ─────────────────────────────────────────────────────────────────
-// Override content file thresholds to match actual XP rates (20xp/correct, ~3 correct/moon avg)
-// 12 moons: 30% skill=~144xp, 50%=~240xp, 65%=~312xp, 85%=~408xp, 95%=~456xp
-const XP_THRESHOLDS = [0, 100, 280, 480, 720, 1000];
+// ── INTRO SCREENS ──────────────────────────────────────────────────────────
+let introPage=1;
 
-function getRankThreshold(rankIdx){ return XP_THRESHOLDS[rankIdx] || (rankIdx * 300); }
+function showIntroPage(n){
+  introPage=n;
+  document.getElementById('intro-s1').classList.toggle('hidden', n!==1);
+  document.getElementById('intro-s2').classList.toggle('hidden', n!==2);
+  document.getElementById('intro-s3').classList.toggle('hidden', n!==3);
+  document.querySelectorAll('.intro-dot').forEach((d,i)=>{
+    d.classList.toggle('active', i===n-1);
+  });
+}
+
+document.getElementById('intro-next-1').addEventListener('click',()=>showIntroPage(2));
+document.getElementById('intro-next-2').addEventListener('click',()=>showIntroPage(3));
+document.getElementById('intro-next-3').addEventListener('click',()=>{
+  document.getElementById('intro-screen').classList.add('hidden');
+  document.getElementById('cat-maker').classList.remove('hidden');
+});
+document.getElementById('intro-skip-btn').addEventListener('click',()=>{
+  document.getElementById('intro-screen').classList.add('hidden');
+  document.getElementById('cat-maker').classList.remove('hidden');
+});
+
+// ── XP / RANK THRESHOLDS ───────────────────────────────────────────────────
+// Tuned for 85% math accuracy over 12 moons (~850 XP total)
+// 65% player reaches rank 4-5, 85% player can reach rank 6
+const XP_THRESHOLDS = [0, 100, 220, 380, 540, 700, 850];
+
+function getRankThreshold(rankIdx){ return XP_THRESHOLDS[Math.min(rankIdx, XP_THRESHOLDS.length-1)] || rankIdx*200; }
 
 function checkRankUp(){
   const arc=STORY_ARCS[S.arcIndex];
@@ -1346,6 +1571,8 @@ function checkRankUp(){
   }
   return false;
 }
+
+
 
 function showCinematic(arc, rankIdx){
   const rank=arc.ranks[rankIdx];
@@ -1524,6 +1751,32 @@ document.getElementById('maker-start-btn').addEventListener('click',()=>{
   Object.assign(S.player,{ name, clan:makerState.clan, coat:makerState.coat,
     marking:makerState.marking, eyes:makerState.eyes, personality:makerState.personality });
   document.getElementById('cat-maker').classList.add('hidden');
+  showArcIntro();
+});
+
+function showArcIntro(){
+  const arc=STORY_ARCS[0];
+  const rank=arc.ranks[0];
+  const name=S.player.name;
+  const clan=S.player.clan;
+
+  document.getElementById('arc-intro-clan').textContent=clan.toUpperCase();
+  document.getElementById('arc-intro-title').textContent=rank.cinematic_title;
+
+  // Use first 3 sentences of cinematic text for the story portion
+  const fullText=rank.cinematic_text.replace(/{name}/g,name).replace(/{clan}/g,clan);
+  const sentences=fullText.match(/[^.!?]+[.!?]+/g)||[];
+  const storyPart=sentences.slice(0,4).join(' ');
+  document.getElementById('arc-intro-text').textContent=storyPart;
+
+  document.getElementById('arc-intro-mission').innerHTML=
+    `You are the leader of <strong>${clan}</strong>. Lead patrols into the territory each moon — answer math challenges to determine how much prey, herbs, and territory your patrol brings home.<br><br>Survive all <strong>12 moons</strong>, build up stores before Leaf-bare, and prove yourself to StarClan. Earn enough experience to rise through the ranks and claim your warrior name.`;
+
+  document.getElementById('arc-intro').classList.remove('hidden');
+}
+
+document.getElementById('arc-intro-begin').addEventListener('click',()=>{
+  document.getElementById('arc-intro').classList.add('hidden');
   S.initialized=true;
   initGame();
 });
@@ -1611,11 +1864,13 @@ initOptionGroups();
 
 // Try to load saved game
 if(load()){
+  document.getElementById('intro-screen').classList.add('hidden');
   document.getElementById('cat-maker').classList.add('hidden');
   updateHUD();
   gameLoop();
 } else {
-  // Show cat maker
+  // First launch — show intro
+  showIntroPage(1);
   gameLoop();
 }
 </script>
